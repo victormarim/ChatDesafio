@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👤 Respondente Humano</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            min-height: 80vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .connection-info {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .connection-info h3 {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        .connection-info p {
+            color: #155724;
+            font-size: 14px;
+        }
+
+        .round-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .round-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .round-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .instructions {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .instructions ul {
+            color: #856404;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .status-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .status-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-message {
+            font-size: 16px;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .question-section {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border: 2px solid #2196f3;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .question-section.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1565c0;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #90caf9;
+        }
+
+        .response-section {
+            margin-bottom: 25px;
+        }
+
+        .response-label {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .response-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f8fff9;
+        }
+
+        .response-textarea:focus {
+            border-color: #20c997;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+            background: white;
+        }
+
+        .response-textarea::placeholder {
+            color: #999;
+            font-style: italic;
+        }
+
+        .button-section {
+            text-align: center;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 200px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .waiting-message {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        .waiting-animation {
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            color: #155724;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .question-text {
+                font-size: 18px;
+            }
+            
+            .response-textarea {
+                min-height: 100px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👤 Respondente Humano 🧠</h1>
+            <p>Interface para pessoa de trás do palco</p>
+        </div>
+
+        <div class="main-content">
+            <div class="connection-info">
+                <h3>✅ Conectado</h3>
+                <p>Você está conectado automaticamente com o apresentador. Aguarde as perguntas chegarem!</p>
+            </div>
+
+            <div class="round-info">
+                <div class="round-number" id="roundNumber">-</div>
+                <div class="round-label" id="roundLabel">Aguardando primeira pergunta</div>
+            </div>
+
+            <div class="instructions">
+                <h3>📋 Instruções:</h3>
+                <ul>
+                    <li>Aguarde a pergunta aparecer na tela automaticamente</li>
+                    <li>Digite sua resposta de forma natural e espontânea</li>
+                    <li>Clique em "Enviar" quando terminar</li>
+                    <li>Sua resposta será sincronizada com a IA</li>
+                    <li>Tente ser humano e autêntico - não robótico!</li>
+                    <li>Use linguagem casual e natural</li>
+                </ul>
+            </div>
+
+            <div class="status-section">
+                <div class="status-title">Status</div>
+                <div class="status-message" id="statusMessage">
+                    <span class="waiting-animation">⏳</span> Aguardando pergunta do apresentador...
+                </div>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✅ Resposta enviada com sucesso! Aguardando próxima pergunta...
+            </div>
+
+            <div class="question-section" id="questionSection">
+                <div class="question-label">📝 Nova Pergunta Recebida:</div>
+                <div class="question-text" id="questionText"></div>
+                
+                <div class="response-section">
+                    <div class="response-label">💭 Sua Resposta (seja natural!):</div>
+                    <textarea 
+                        class="response-textarea" 
+                        id="responseInput" 
+                        placeholder="Digite aqui sua resposta natural e espontânea... Use suas próprias palavras!"
+                        maxlength="500"
+                    ></textarea>
+                </div>
+
+                <div class="button-section">
+                    <button class="submit-btn" id="submitBtn" onclick="submitResponse()">
+                        Enviar Resposta
+                    </button>
+                </div>
+            </div>
+
+            <div class="waiting-message" id="waitingMessage">
+                <span class="waiting-animation">🤔</span> Aguardando pergunta do apresentador...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== VARIÁVEIS GLOBAIS =====
+        let currentQuestionId = null;
+        let roundCounter = 0;
+        let checkInterval = null;
+
+        // ===== VERIFICAÇÃO DE NOVAS PERGUNTAS =====
+        function checkForNewQuestions() {
+            const questionData = localStorage.getItem('currentQuestion');
+            
+            if (questionData) {
+                const question = JSON.parse(questionData);
+                
+                // Verificar se é uma pergunta nova
+                if (question.id !== currentQuestionId) {
+                    currentQuestionId = question.id;
+                    roundCounter++;
+                    showNewQuestion(question.question);
+                }
+            }
+        }
+
+        function showNewQuestion(questionText) {
+            // Atualizar contador de rodada
+            document.getElementById('roundNumber').textContent = roundCounter;
+            document.getElementById('roundLabel').textContent = `Rodada ${roundCounter} - Responda agora!`;
+
+            // Mostrar a pergunta
+            document.getElementById('questionText').textContent = questionText;
+            document.getElementById('questionSection').classList.add('active');
+            document.getElementById('waitingMessage').style.display = 'none';
+            document.getElementById('successMessage').classList.remove('show');
+            
+            // Atualizar status
+            document.getElementById('statusMessage').innerHTML = '📝 <strong>Nova pergunta recebida!</strong> Responda naturalmente.';
+            document.getElementById('statusMessage').style.color = '#dc3545';
+            
+            // Limpar textarea anterior e focar
+            const responseInput = document.getElementById('responseInput');
+            responseInput.value = '';
+            responseInput.focus();
+            
+            // Habilitar botão
+            document.getElementById('submitBtn').disabled = false;
+            
+            // Reproduzir som de notificação (opcional)
+            playNotificationSound();
+        }
+
+        function playNotificationSound() {
+            // Som simples de notificação
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                // Ignorar erro de áudio se não funcionar
+                console.log('Áudio não disponível');
+            }
+        }
+
+        // ===== ENVIO DE RESPOSTA =====
+        function submitResponse() {
+            const responseInput = document.getElementById('responseInput');
+            const response = responseInput.value.trim();
+            
+            if (!response) {
+                alert('Por favor, digite uma resposta antes de enviar.');
+                responseInput.focus();
+                return;
+            }
+
+            if (response.length < 10) {
+                alert('Sua resposta está muito curta. Tente elaborar um pouco mais para parecer mais natural.');
+                responseInput.focus();
+                return;
+            }
+
+            if (!currentQuestionId) {
+                alert('Erro: Nenhuma pergunta ativa encontrada. Aguarde uma nova pergunta.');
+                return;
+            }
+
+            // Salvar resposta no localStorage
+            localStorage.setItem(`human_response_${currentQuestionId}`, JSON.stringify({
+                response: response,
+                timestamp: Date.now()
+            }));
+
+            // Mostrar feedback de sucesso
+            document.getElementById('successMessage').classList.add('show');
+            document.getElementById('questionSection').classList.remove('active');
+            document.getElementById('waitingMessage').style.display = 'block';
+            
+            // Atualizar status
+            document.getElementById('statusMessage').innerHTML = '<span class="waiting-animation">⏳</span> Resposta enviada! Aguardando próxima pergunta...';
+            document.getElementById('statusMessage').style.color = '#28a745';
+            
+            // Atualizar rodada
+            document.getElementById('roundLabel').textContent = `Rodada ${roundCounter} - Resposta enviada!`;
+            
+            // Desabilitar botão
+            document.getElementById('submitBtn').disabled = true;
+            
+            // Resetar estado
+            currentQuestionId = null;
+            
+            console.log('Resposta enviada:', response);
+        }
+
+        // ===== EVENTOS DE TECLADO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const responseInput = document.getElementById('responseInput');
+            
+            // Permitir envio com Ctrl+Enter
+            responseInput?.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' && event.ctrlKey) {
+                    event.preventDefault();
+                    if (!document.getElementById('submitBtn').disabled) {
+                        submitResponse();
+                    }
+                }
+            });
+
+            // Auto-resize textarea
+            responseInput?.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+            });
+        });
+
+        // ===== MONITORAMENTO CONTÍNUO =====
+        function startMonitoring() {
+            // Verificar por novas perguntas a cada 500ms
+            checkInterval = setInterval(checkForNewQuestions, 500);
+            
+            // Verificar imediatamente
+            checkForNewQuestions();
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        window.addEventListener('load', function() {
+            console.log('Respondente iniciado - aguardando perguntas...');
+            startMonitoring();
+        });
+
+        // ===== LIMPEZA =====
+        window.addEventListener('beforeunload', function() {
+            if (checkInterval) {
+                clearInterval(checkInterval);
+            }
+        });
+
+        // ===== DEBUG (remover em produção) =====
+        window.debugInfo = function() {
+            console.log('Estado atual:');
+            console.log('- Round:', roundCounter);
+            console.log('- Question ID:', currentQuestionId);
+            console.log('- LocalStorage questions:', localStorage.getItem('currentQuestion'));
+            console.log('- LocalStorage responses:', Object.keys(localStorage).filter(k => k.includes('response')));
+        };
+    </script>
+</body>
+</html>
