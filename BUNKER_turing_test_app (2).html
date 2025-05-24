@@ -112,9 +112,50 @@
             let tensionStartTime = null;
             let tensionInterval = null;
 
-            // Configuração Supabase (mesmas credenciais)
+            // Configuração Supabase (API REST direta)
             const SUPABASE_URL = 'https://ocqosdtvnsnlwagvofan.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcW9zZHR2bnNubHdhZ3ZvZmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1NDI3NzEsImV4cCI6MjA2MjExODc3MX0.SUMylY0oR1GJmrXqd9yhIUtKdInifUsZKt4XUvJN1T8';
+
+            // Cliente Supabase customizado (API REST)
+            const supabaseClient = {
+                async select(table, query = '*') {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${query}`, {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    return await response.json();
+                },
+                
+                async insert(table, data) {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    return await response.json();
+                },
+                
+                async update(table, data, filter) {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    return await response.json();
+                }
+            };
 
             // Estado do jogo
             let gameState = {
@@ -982,8 +1023,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Protocolo de Sobrevivência - 2027</title>
         
-        <!-- Supabase SDK -->
-        <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
         <!-- QR Code Generator -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
         
