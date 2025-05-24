@@ -1,156 +1,4 @@
-<div id="testResult" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px; display: none;">
-                <h4 style="color: #ccc; margin-bottom: 10px;">Teste da Personalidade:</h4>
-                <div id="testResponse" style="color: #e0e0e0;"></div>
-            </div>
-        </div>
-
-        <!-- Configurações Gerais -->
-        <div class="config-panel" id="settingsPanel">
-            <h3>⚙️ Configurações do Sistema</h3>
-            
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 15px;">Gerenciar Conversas:</h4>
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button onclick="clearChat()" class="send-btn" style="background: #5a2d2d;">🗑️ Limpar Chat Atual</button>
-                    <button onclick="exportChat()" class="send-btn" style="background: #2d5a2d;">📥 Exportar Conversa</button>
-                </div>
-                
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <h4 style="color: #ccc; margin-bottom: 10px;">Limpeza Automática:</h4>
-                    <label style="display: flex; align-items: center; gap: 10px; color: #e0e0e0; cursor: pointer;">
-                        <input type="checkbox" id="autoClearCheck" onchange="toggleAutoClear()" style="transform: scale(1.2);">
-                        Limpar chat automaticamente ao atualizar a página
-                    </label>
-                    <p style="font-size: 0.9em; color: #888; margin-top: 8px;">
-                        ✅ Recomendado para apresentações entre diferentes turmas
-                    </p>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 15px;">Estatísticas da Sessão:</h4>
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
-                        <div>
-                            <div style="font-size: 1.5em; color: #4a9; font-weight: bold;" id="questionCount">0</div>
-                            <div style="color: #888; font-size: 0.9em;">Perguntas</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 1.5em; color: #94a; font-weight: bold;" id="sessionTime">00:00</div>
-                            <div style="color: #888; font-size: 0.9em;">Tempo de Sessão</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 15px;">Informações:</h4>
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; font-size: 0.9em; color: #ccc;">
-                    <p>• As configurações são salvas localmente no navegador</p>
-                    <p>• Cada aba/janela mantém uma sessão independente</p>
-                    <p>• API Key e personalidade ficam salvas entre sessões</p>
-                    <p>• Use o modo "Limpeza Automática" para apresentações</p>
-                </div>
-            </div>
-        </div>        <!-- Configuração -->
-        <div class="config-panel" id="configPanel">
-            <h3>🔑 Configuração da OpenAI</h3>
-            <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key da OpenAI aqui">
-            <button onclick="saveApiKey()" class="send-btn">Salvar API Key</button>
-            <p style="margin-top: 10px; font-size: 0.9em; color: #888;">
-                Sua API key é armazenada apenas localmente no seu navegador.
-            </p>
-        </div>
-
-        <!-- Configuração da Personalidade -->
-        <div class="config-panel" id="personalityPanel">
-            <h3>🎭 Configurar Personalidade da IA</h3>
-            
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 10px;">Personalidades Pré-definidas:</h4>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                    <button class="personality-preset" onclick="loadPersonality('casual')">😊 Casual</button>
-                    <button class="personality-preset" onclick="loadPersonality('formal')">🎩 Formal</button>
-                    <button class="personality-preset" onclick="loadPersonality('teenager')">😎 Adolescente</button>
-                    <button class="personality-preset" onclick="loadPersonality('professor')">👨‍🏫 Professor</button>
-                    <button class="personality-preset" onclick="loadPersonality('comedian')">😂 Comediante</button>
-                    <button class="personality-preset" onclick="loadPersonality('robot')">🤖 Robótico</button>
-                </div>
-            </div>
-
-            <label style="color: #ccc; display: block; margin-bottom: 5px;">Prompt do Sistema (Como a IA deve se comportar):</label>
-            <textarea id="systemPromptInput" class="config-input" rows="6" style="resize: vertical;" 
-                placeholder="Ex: Você é um jovem de 20 anos, descontraído e usa gírias. Responda de forma natural e informal, como se estivesse conversando com amigos..."></textarea>
-            
-            <label style="color: #ccc; display: block; margin-bottom: 5px; margin-top: 15px;">Configurações Avançadas:</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label style="color: #999; font-size: 0.9em;">Temperatura (Criatividade):</label>
-                    <input type="range" id="temperatureSlider" min="0" max="1" step="0.1" value="0.7" class="config-input">
-                    <span id="temperatureValue" style="color: #ccc;">0.7</span>
-                </div>
-                <div>
-                    <label style="color: #999; font-size: 0.9em;">Máximo de Tokens:</label>
-                    <input type="number" id="maxTokensInput" value="150" min="50" max="500" class="config-input">
-                </div>
-            </div>
-
-            <div style="margin-top: 20px;">
-                <button onclick="savePersonality()" class="send-btn" style="margin-right: 10px;">Salvar Personalidade</button>
-                <button onclick="testPersonality()" class="send-btn" style="background: #2d5a2d;">Testar</button>
-            </div>
-
-        <!-- Configurações Gerais -->
-        <div class="config-panel" id="settingsPanel">
-            <h3>⚙️ Configurações do Sistema</h3>
-            
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 15px;">Gerenciar Conversas:</h4>
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button onclick="clearChat()" class="send-btn" style="background: #5a2d2d;">🗑️ Limpar Chat Atual</button>
-                    <button onclick="exportChat()" class="send-btn" style="background: #2d5a2d;">📥 Exportar Conversa</button>
-                </div>
-                
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <h4 style="color: #ccc; margin-bottom: 10px;">Limpeza Automática:</h4>
-                    <label style="display: flex; align-items: center; gap: 10px; color: #e0e0e0; cursor: pointer;">
-                        <input type="checkbox" id="autoClearCheck" onchange="toggleAutoClear()" style="transform: scale(1.2);">
-                        Limpar chat automaticamente ao atualizar a página
-                    </label>
-                    <p style="font-size: 0.9em; color: #888; margin-top: 8px;">
-                        ✅ Recomendado para apresentações entre diferentes turmas
-                    </p>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 15px;">Estatísticas da Sessão:</h4>
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
-                        <div>
-                            <div style="font-size: 1.5em; color: #4a9; font-weight: bold;" id="questionCount">0</div>
-                            <div style="color: #888; font-size: 0.9em;">Perguntas</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 1.5em; color: #94a; font-weight: bold;" id="sessionTime">00:00</div>
-                            <div style="color: #888; font-size: 0.9em;">Tempo de Sessão</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 15px;">Informações:</h4>
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; font-size: 0.9em; color: #ccc;">
-                    <p>• As configurações são salvas localmente no navegador</p>
-                    <p>• Cada aba/janela mantém uma sessão independente</p>
-                    <p>• API Key e personalidade ficam salvas entre sessões</p>
-                    <p>• Use o modo "Limpeza Automática" para apresentações</p>
-                </div>
-            </div>
-        </div><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -200,19 +48,20 @@
 
         .role-selector {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             justify-content: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
 
         .role-btn {
-            padding: 15px 30px;
+            padding: 12px 20px;
             border: 2px solid #404040;
             background: transparent;
             color: #e0e0e0;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1em;
+            font-size: 1em;
             transition: all 0.3s ease;
         }
 
@@ -226,49 +75,63 @@
             border-color: #666;
         }
 
-        .chat-container {
-            flex: 1;
+        .panel {
+            background: #333;
+            border-radius: 12px;
+            padding: 20px;
             display: none;
             flex-direction: column;
-            background: #252525;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            flex: 1;
         }
 
-        .chat-container.active {
+        .panel.active {
             display: flex;
         }
 
+        .chat-container {
+            background: #252525;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
         .chat-header {
-            padding: 20px;
             background: #333;
-            border-bottom: 1px solid #404040;
+            padding: 20px;
             text-align: center;
+            border-bottom: 1px solid #404040;
         }
 
         .chat-messages {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            max-height: 400px;
         }
 
         .message {
             margin-bottom: 20px;
-            animation: fadeIn 0.5s ease;
         }
 
         .message.question {
             text-align: right;
         }
 
-        .message.question .bubble {
-            background: #404040;
-            margin-left: 20%;
+        .bubble {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            border-radius: 18px;
+            border: 1px solid #404040;
+            display: inline-block;
+            max-width: 70%;
         }
 
-        .message.answers {
+        .message.question .bubble {
+            background: #404040;
+        }
+
+        .answers {
             display: flex;
             gap: 15px;
             margin-top: 10px;
@@ -287,14 +150,6 @@
             color: #888;
             font-size: 0.9em;
             margin-bottom: 8px;
-        }
-
-        .bubble {
-            background: #1a1a1a;
-            padding: 15px 20px;
-            border-radius: 18px;
-            margin-right: 20%;
-            border: 1px solid #404040;
         }
 
         .input-area {
@@ -338,31 +193,35 @@
             background: #555;
         }
 
-        .send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .config-panel {
-            background: #333;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .config-panel.active {
-            display: block;
-        }
-
         .config-input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin: 10px 0;
             background: #1a1a1a;
             border: 1px solid #404040;
             color: #e0e0e0;
-            border-radius: 5px;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .config-input:focus {
+            border-color: #666;
+        }
+
+        .preset-btn {
+            padding: 8px 12px;
+            background: #404040;
+            border: none;
+            color: #e0e0e0;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background: #555;
         }
 
         .waiting {
@@ -386,11 +245,6 @@
             to { transform: rotate(360deg); }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         .status {
             position: fixed;
             top: 20px;
@@ -404,20 +258,26 @@
         .status.connected { background: #2d5a2d; }
         .status.disconnected { background: #5a2d2d; }
 
-        .personality-preset {
-            padding: 8px 12px;
-            background: #404040;
-            border: none;
-            color: #e0e0e0;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.3s ease;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
         }
 
-        .personality-preset:hover {
-            background: #555;
-            transform: translateY(-2px);
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a9;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
         }
     </style>
 </head>
@@ -431,132 +291,190 @@
         <div class="role-selector">
             <button class="role-btn" onclick="selectRole('presenter')">Apresentador</button>
             <button class="role-btn" onclick="selectRole('responder')">Respondente</button>
-            <button class="role-btn" onclick="selectRole('config')">Configurar API</button>
-            <button class="role-btn" onclick="selectRole('personality')">Personalidade IA</button>
-            <button class="role-btn" onclick="selectRole('settings')" style="background: #5a2d2d;">⚙️ Configurações</button>
+            <button class="role-btn" onclick="selectRole('config')">API Config</button>
+            <button class="role-btn" onclick="selectRole('personality')">Personalidade</button>
+            <button class="role-btn" onclick="selectRole('settings')">Configurações</button>
         </div>
 
-        <!-- Configuração da Personalidade -->
-        <div class="config-panel" id="personalityPanel">
-            <h3>🎭 Configurar Personalidade da IA</h3>
-            
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #ccc; margin-bottom: 10px;">Personalidades Pré-definidas:</h4>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                    <button class="personality-preset" onclick="loadPersonality('casual')">😊 Casual</button>
-                    <button class="personality-preset" onclick="loadPersonality('formal')">🎩 Formal</button>
-                    <button class="personality-preset" onclick="loadPersonality('teenager')">😎 Adolescente</button>
-                    <button class="personality-preset" onclick="loadPersonality('professor')">👨‍🏫 Professor</button>
-                    <button class="personality-preset" onclick="loadPersonality('comedian')">😂 Comediante</button>
-                    <button class="personality-preset" onclick="loadPersonality('robot')">🤖 Robótico</button>
+        <!-- Painel do Apresentador -->
+        <div class="panel" id="presenterPanel">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>Chat - Apresentador</h2>
+                    <p>Faça perguntas e veja as respostas dos dois respondentes</p>
+                </div>
+                <div class="chat-messages" id="presenterMessages"></div>
+                <div class="input-area">
+                    <div class="input-group">
+                        <input type="text" id="questionInput" class="message-input" placeholder="Digite sua pergunta...">
+                        <button onclick="sendQuestion()" class="send-btn">Enviar</button>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <label style="color: #ccc; display: block; margin-bottom: 5px;">Prompt do Sistema (Como a IA deve se comportar):</label>
-            <textarea id="systemPromptInput" class="config-input" rows="6" style="resize: vertical;" 
-                placeholder="Ex: Você é um jovem de 20 anos, descontraído e usa gírias. Responda de forma natural e informal, como se estivesse conversando com amigos..."></textarea>
-            
-            <label style="color: #ccc; display: block; margin-bottom: 5px; margin-top: 15px;">Configurações Avançadas:</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label style="color: #999; font-size: 0.9em;">Temperatura (Criatividade):</label>
-                    <input type="range" id="temperatureSlider" min="0" max="1" step="0.1" value="0.7" class="config-input">
-                    <span id="temperatureValue" style="color: #ccc;">0.7</span>
+        <!-- Painel do Respondente -->
+        <div class="panel" id="responderPanel">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>Chat - Respondente</h2>
+                    <p>Responda às perguntas do apresentador</p>
                 </div>
-                <div>
-                    <label style="color: #999; font-size: 0.9em;">Máximo de Tokens:</label>
+                <div class="chat-messages" id="responderMessages"></div>
+                <div class="input-area">
+                    <div class="input-group">
+                        <input type="text" id="answerInput" class="message-input" placeholder="Digite sua resposta...">
+                        <button onclick="sendAnswer()" class="send-btn">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuração da API -->
+        <div class="panel" id="configPanel">
+            <h3>🔑 Configuração da OpenAI</h3>
+            <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key da OpenAI aqui">
+            <button onclick="saveApiKey()" class="send-btn">Salvar API Key</button>
+            <p style="margin-top: 10px; color: #888;">
+                Sua API key é armazenada apenas localmente no seu navegador.
+            </p>
+        </div>
+
+        <!-- Configuração de Personalidade -->
+        <div class="panel" id="personalityPanel">
+            <h3>🎭 Personalidade da IA</h3>
+            
+            <h4 style="margin: 20px 0 10px 0;">Personalidades Pré-definidas:</h4>
+            <div>
+                <button class="preset-btn" onclick="loadPersonality('casual')">😊 Casual</button>
+                <button class="preset-btn" onclick="loadPersonality('formal')">🎩 Formal</button>
+                <button class="preset-btn" onclick="loadPersonality('teenager')">😎 Adolescente</button>
+                <button class="preset-btn" onclick="loadPersonality('professor')">👨‍🏫 Professor</button>
+                <button class="preset-btn" onclick="loadPersonality('comedian')">😂 Comediante</button>
+                <button class="preset-btn" onclick="loadPersonality('robot')">🤖 Robótico</button>
+            </div>
+
+            <label style="display: block; margin: 20px 0 5px 0;">Prompt do Sistema:</label>
+            <textarea id="systemPromptInput" class="config-input" rows="4" 
+                placeholder="Descreva como a IA deve se comportar..."></textarea>
+            
+            <div style="display: flex; gap: 15px; margin: 15px 0;">
+                <div style="flex: 1;">
+                    <label>Temperatura: <span id="temperatureValue">0.7</span></label>
+                    <input type="range" id="temperatureSlider" min="0" max="1" step="0.1" value="0.7" 
+                           onchange="updateTemperature()" style="width: 100%; margin-top: 5px;">
+                </div>
+                <div style="flex: 1;">
+                    <label>Max Tokens:</label>
                     <input type="number" id="maxTokensInput" value="150" min="50" max="500" class="config-input">
                 </div>
             </div>
 
             <div style="margin-top: 20px;">
-                <button onclick="savePersonality()" class="send-btn" style="margin-right: 10px;">Salvar Personalidade</button>
+                <button onclick="savePersonality()" class="send-btn" style="margin-right: 10px;">Salvar</button>
                 <button onclick="testPersonality()" class="send-btn" style="background: #2d5a2d;">Testar</button>
             </div>
 
             <div id="testResult" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px; display: none;">
-                <h4 style="color: #ccc; margin-bottom: 10px;">Teste da Personalidade:</h4>
-                <div id="testResponse" style="color: #e0e0e0;"></div>
+                <h4>Teste da Personalidade:</h4>
+                <div id="testResponse" style="margin-top: 10px;"></div>
             </div>
         </div>
 
-        <!-- Chat do Apresentador -->
-        <div class="chat-container" id="presenterChat">
-            <div class="chat-header">
-                <h2>Chat - Apresentador</h2>
-                <p>Faça perguntas e veja as respostas dos dois respondentes</p>
+        <!-- Configurações Gerais -->
+        <div class="panel" id="settingsPanel">
+            <h3>⚙️ Configurações do Sistema</h3>
+            
+            <div style="margin: 20px 0;">
+                <button onclick="clearChat()" class="send-btn" style="background: #5a2d2d; margin-right: 10px;">🗑️ Limpar Chat</button>
+                <button onclick="exportChat()" class="send-btn" style="background: #2d5a2d;">📥 Exportar</button>
             </div>
-            <div class="chat-messages" id="presenterMessages"></div>
-            <div class="input-area">
-                <div class="input-group">
-                    <input type="text" id="questionInput" class="message-input" placeholder="Digite sua pergunta...">
-                    <button onclick="sendQuestion()" class="send-btn" id="sendQuestionBtn">Enviar</button>
+            
+            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="autoClearCheck" onchange="toggleAutoClear()">
+                    Limpar chat automaticamente ao atualizar a página
+                </label>
+                <p style="font-size: 0.9em; color: #888; margin-top: 8px;">
+                    Recomendado para apresentações entre diferentes turmas
+                </p>
+            </div>
+
+            <div class="stats-grid">
+                <div>
+                    <div class="stat-value" id="questionCount">0</div>
+                    <div class="stat-label">Perguntas</div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Chat do Respondente -->
-        <div class="chat-container" id="responderChat">
-            <div class="chat-header">
-                <h2>Chat - Respondente</h2>
-                <p>Responda às perguntas do apresentador</p>
-            </div>
-            <div class="chat-messages" id="responderMessages"></div>
-            <div class="input-area">
-                <div class="input-group">
-                    <input type="text" id="answerInput" class="message-input" placeholder="Digite sua resposta...">
-                    <button onclick="sendAnswer()" class="send-btn" id="sendAnswerBtn">Enviar</button>
+                <div>
+                    <div class="stat-value" id="sessionTime">00:00</div>
+                    <div class="stat-label">Tempo</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="status" id="status">Desconectado</div>
+    <div class="status" id="status">Selecione seu papel</div>
 
     <script>
-        // Simulação de WebSocket para comunicação entre as telas
+        // Variáveis globais
         let currentRole = null;
         let apiKey = localStorage.getItem('openai_api_key') || '';
         let sessionStartTime = Date.now();
         let autoClear = localStorage.getItem('auto_clear') === 'true';
+        
         let aiPersonality = {
-            systemPrompt: localStorage.getItem('ai_system_prompt') || 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa. Evite soar muito formal ou robótico.',
+            systemPrompt: localStorage.getItem('ai_system_prompt') || 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa.',
             temperature: parseFloat(localStorage.getItem('ai_temperature')) || 0.7,
             maxTokens: parseInt(localStorage.getItem('ai_max_tokens')) || 150
         };
+        
         let gameState = {
             questions: [],
             currentQuestion: null,
-            waitingForAnswers: false,
-            humanAnswer: null,
-            aiAnswer: null
+            waitingForAnswers: false
         };
 
-        // Carrega estado do localStorage
-        function loadGameState() {
-            // Se auto-clear está ativado, não carrega o estado anterior
-            if (autoClear) {
-                gameState = {
-                    questions: [],
-                    currentQuestion: null,
-                    waitingForAnswers: false,
-                    humanAnswer: null,
-                    aiAnswer: null
-                };
-                sessionStartTime = Date.now();
-                localStorage.removeItem('turing_game_state');
-                return;
+        // Personalidades pré-definidas
+        const personalities = {
+            casual: {
+                prompt: 'Você é uma pessoa descontraída e amigável. Responda de forma natural, como um amigo próximo.',
+                temperature: 0.8,
+                maxTokens: 120
+            },
+            formal: {
+                prompt: 'Você é uma pessoa educada e formal. Responda sempre de maneira cortês e profissional.',
+                temperature: 0.5,
+                maxTokens: 180
+            },
+            teenager: {
+                prompt: 'Você é um adolescente de 17 anos, descolado. Use gírias da internet, seja divertido.',
+                temperature: 0.9,
+                maxTokens: 100
+            },
+            professor: {
+                prompt: 'Você é um professor experiente. Responda de forma educativa, sempre ensinando algo.',
+                temperature: 0.6,
+                maxTokens: 200
+            },
+            comedian: {
+                prompt: 'Você tem ótimo senso de humor. Responda de forma engraçada sempre que possível.',
+                temperature: 0.9,
+                maxTokens: 130
+            },
+            robot: {
+                prompt: 'Você é claramente uma IA. Responda de forma robótica, mencionando que é uma IA.',
+                temperature: 0.3,
+                maxTokens: 160
             }
+        };
 
-            const saved = localStorage.getItem('turing_game_state');
-            if (saved) {
-                gameState = { ...gameState, ...JSON.parse(saved) };
-            }
-        }
-
-        // Salva estado no localStorage
-        function saveGameState() {
-            localStorage.setItem('turing_game_state', JSON.stringify(gameState));
+        // Inicialização
+        function init() {
+            loadGameState();
+            updateStatus();
+            updateStats();
+            loadPersonalitySettings();
+            document.getElementById('autoClearCheck').checked = autoClear;
         }
 
         // Seleção de papel
@@ -567,27 +485,64 @@
             document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Mostra interface apropriada
-            document.querySelectorAll('.chat-container, .config-panel').forEach(el => el.classList.remove('active'));
+            // Esconde todos os painéis
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
             
+            // Mostra painel apropriado
+            const panelMap = {
+                presenter: 'presenterPanel',
+                responder: 'responderPanel',
+                config: 'configPanel',
+                personality: 'personalityPanel',
+                settings: 'settingsPanel'
+            };
+            
+            const targetPanel = document.getElementById(panelMap[role]);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+            
+            // Carrega dados específicos
             if (role === 'presenter') {
-                document.getElementById('presenterChat').classList.add('active');
                 loadPresenterMessages();
             } else if (role === 'responder') {
-                document.getElementById('responderChat').classList.add('active');
                 loadResponderMessages();
             } else if (role === 'config') {
-                document.getElementById('configPanel').classList.add('active');
                 document.getElementById('apiKeyInput').value = apiKey;
             } else if (role === 'personality') {
-                document.getElementById('personalityPanel').classList.add('active');
                 loadPersonalitySettings();
             } else if (role === 'settings') {
-                document.getElementById('settingsPanel').classList.add('active');
-                loadSettingsPanel();
+                updateStats();
             }
             
             updateStatus();
+        }
+
+        // Gerenciamento de estado
+        function loadGameState() {
+            if (autoClear) {
+                gameState = {
+                    questions: [],
+                    currentQuestion: null,
+                    waitingForAnswers: false
+                };
+                sessionStartTime = Date.now();
+                localStorage.removeItem('turing_game_state');
+                return;
+            }
+
+            const saved = localStorage.getItem('turing_game_state');
+            if (saved) {
+                try {
+                    gameState = { ...gameState, ...JSON.parse(saved) };
+                } catch (e) {
+                    console.error('Erro ao carregar estado:', e);
+                }
+            }
+        }
+
+        function saveGameState() {
+            localStorage.setItem('turing_game_state', JSON.stringify(gameState));
         }
 
         // Configuração da API
@@ -601,66 +556,29 @@
             }
         }
 
-        // Personalidades pré-definidas
-        const personalities = {
-            casual: {
-                prompt: 'Você é uma pessoa descontraída e amigável. Responda de forma natural, como se estivesse conversando com um amigo próximo. Use linguagem informal, mas seja respeitoso.',
-                temperature: 0.8,
-                maxTokens: 120
-            },
-            formal: {
-                prompt: 'Você é uma pessoa educada e formal. Responda sempre de maneira cortês, utilizando linguagem adequada e estruturada. Seja respeitoso e profissional.',
-                temperature: 0.5,
-                maxTokens: 180
-            },
-            teenager: {
-                prompt: 'Você é um adolescente de 17 anos, descolado e antenado. Use gírias da internet, seja divertido e responda como um jovem atual. Seja autêntico mas não exagere.',
-                temperature: 0.9,
-                maxTokens: 100
-            },
-            professor: {
-                prompt: 'Você é um professor experiente e sábio. Responda de forma educativa, sempre tentando ensinar algo interessante. Seja didático mas não condescendente.',
-                temperature: 0.6,
-                maxTokens: 200
-            },
-            comedian: {
-                prompt: 'Você tem um ótimo senso de humor e adora fazer piadas. Responda de forma engraçada sempre que possível, mas sem ser ofensivo. Seja espirituoso e divert ido.',
-                temperature: 0.9,
-                maxTokens: 130
-            },
-            robot: {
-                prompt: 'Você é claramente uma inteligência artificial. Responda de forma robótica, mencionando ocasionalmente que é uma IA. Use termos técnicos e seja preciso.',
-                temperature: 0.3,
-                maxTokens: 160
-            }
-        };
-
-        // Carregar personalidade pré-definida
+        // Funções de personalidade
         function loadPersonality(type) {
             const personality = personalities[type];
             if (personality) {
                 document.getElementById('systemPromptInput').value = personality.prompt;
                 document.getElementById('temperatureSlider').value = personality.temperature;
                 document.getElementById('maxTokensInput').value = personality.maxTokens;
-                updateTemperatureDisplay();
+                updateTemperature();
             }
         }
 
-        // Carregar configurações de personalidade
         function loadPersonalitySettings() {
             document.getElementById('systemPromptInput').value = aiPersonality.systemPrompt;
             document.getElementById('temperatureSlider').value = aiPersonality.temperature;
             document.getElementById('maxTokensInput').value = aiPersonality.maxTokens;
-            updateTemperatureDisplay();
+            updateTemperature();
         }
 
-        // Atualizar display da temperatura
-        function updateTemperatureDisplay() {
+        function updateTemperature() {
             const value = document.getElementById('temperatureSlider').value;
             document.getElementById('temperatureValue').textContent = value;
         }
 
-        // Salvar personalidade
         function savePersonality() {
             aiPersonality.systemPrompt = document.getElementById('systemPromptInput').value;
             aiPersonality.temperature = parseFloat(document.getElementById('temperatureSlider').value);
@@ -670,20 +588,18 @@
             localStorage.setItem('ai_temperature', aiPersonality.temperature);
             localStorage.setItem('ai_max_tokens', aiPersonality.maxTokens);
 
-            alert('Personalidade da IA salva com sucesso!');
+            alert('Personalidade salva com sucesso!');
         }
 
-        // Testar personalidade
         async function testPersonality() {
             if (!apiKey) {
                 alert('Configure sua API Key primeiro!');
                 return;
             }
 
-            const testButton = event.target;
-            const originalText = testButton.textContent;
-            testButton.textContent = 'Testando...';
-            testButton.disabled = true;
+            const btn = event.target;
+            btn.textContent = 'Testando...';
+            btn.disabled = true;
 
             try {
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -695,14 +611,8 @@
                     body: JSON.stringify({
                         model: 'gpt-3.5-turbo',
                         messages: [
-                            {
-                                role: 'system',
-                                content: aiPersonality.systemPrompt
-                            },
-                            {
-                                role: 'user',
-                                content: 'Oi! Como você está hoje?'
-                            }
+                            { role: 'system', content: aiPersonality.systemPrompt },
+                            { role: 'user', content: 'Oi! Como você está hoje?' }
                         ],
                         max_tokens: aiPersonality.maxTokens,
                         temperature: aiPersonality.temperature
@@ -715,89 +625,20 @@
                     document.getElementById('testResult').style.display = 'block';
                     document.getElementById('testResponse').textContent = data.choices[0].message.content;
                 } else {
-                    alert('Erro no teste: ' + (data.error?.message || 'Resposta inválida'));
+                    alert('Erro: ' + (data.error?.message || 'Resposta inválida'));
                 }
             } catch (error) {
-                alert('Erro no teste: ' + error.message);
+                alert('Erro: ' + error.message);
             } finally {
-                testButton.textContent = originalText;
-                testButton.disabled = false;
+                btn.textContent = 'Testar';
+                btn.disabled = false;
             }
         }
 
-        // Funções de configurações gerais
-        function loadSettingsPanel() {
-            document.getElementById('autoClearCheck').checked = autoClear;
-            updateStats();
-        }
-
-        function toggleAutoClear() {
-            autoClear = document.getElementById('autoClearCheck').checked;
-            localStorage.setItem('auto_clear', autoClear);
-        }
-
-        function clearChat() {
-            if (confirm('Tem certeza que deseja limpar toda a conversa? Esta ação não pode ser desfeita.')) {
-                gameState = {
-                    questions: [],
-                    currentQuestion: null,
-                    waitingForAnswers: false,
-                    humanAnswer: null,
-                    aiAnswer: null
-                };
-                
-                sessionStartTime = Date.now();
-                saveGameState();
-                
-                // Atualiza todas as interfaces
-                loadPresenterMessages();
-                loadResponderMessages();
-                updateStats();
-                
-                alert('Chat limpo com sucesso!');
-            }
-        }
-
-        function exportChat() {
-            if (gameState.questions.length === 0) {
-                alert('Não há conversas para exportar.');
-                return;
-            }
-
-            let exportText = `TESTE DE TURING - SESSÃO ${new Date().toLocaleString()}\n`;
-            exportText += `Total de perguntas: ${gameState.questions.length}\n`;
-            exportText += `Duração: ${formatTime(Date.now() - sessionStartTime)}\n\n`;
-            
-            gameState.questions.forEach((q, index) => {
-                exportText += `PERGUNTA ${index + 1}: ${q.text}\n`;
-                exportText += `RESPONDENTE 1: ${q.humanAnswer}\n`;
-                exportText += `RESPONDENTE 2: ${q.aiAnswer}\n\n`;
-            });
-
-            const blob = new Blob([exportText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `teste-turing-${Date.now()}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function updateStats() {
-            document.getElementById('questionCount').textContent = gameState.questions.length;
-            document.getElementById('sessionTime').textContent = formatTime(Date.now() - sessionStartTime);
-        }
-
-        function formatTime(ms) {
-            const minutes = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000);
-            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        // Enviar pergunta (Apresentador)
+        // Envio de perguntas e respostas
         async function sendQuestion() {
             if (!apiKey) {
-                alert('Por favor, configure sua API Key primeiro.');
+                alert('Configure sua API Key primeiro!');
                 return;
             }
 
@@ -806,7 +647,6 @@
             
             if (!question) return;
             
-            // Adiciona pergunta ao estado
             gameState.currentQuestion = {
                 text: question,
                 timestamp: Date.now(),
@@ -824,7 +664,6 @@
             await generateAIResponse(question);
         }
 
-        // Gerar resposta da IA
         async function generateAIResponse(question) {
             try {
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -836,14 +675,8 @@
                     body: JSON.stringify({
                         model: 'gpt-3.5-turbo',
                         messages: [
-                            {
-                                role: 'system',
-                                content: aiPersonality.systemPrompt
-                            },
-                            {
-                                role: 'user',
-                                content: question
-                            }
+                            { role: 'system', content: aiPersonality.systemPrompt },
+                            { role: 'user', content: question }
                         ],
                         max_tokens: aiPersonality.maxTokens,
                         temperature: aiPersonality.temperature
@@ -857,17 +690,16 @@
                     saveGameState();
                     checkBothAnswersReady();
                 } else {
-                    throw new Error('Resposta inválida da API');
+                    throw new Error('Resposta inválida');
                 }
             } catch (error) {
-                console.error('Erro ao gerar resposta da IA:', error);
-                gameState.currentQuestion.aiAnswer = 'Desculpe, houve um erro ao gerar minha resposta.';
+                console.error('Erro IA:', error);
+                gameState.currentQuestion.aiAnswer = 'Erro ao gerar resposta.';
                 saveGameState();
                 checkBothAnswersReady();
             }
         }
 
-        // Enviar resposta (Respondente)
         function sendAnswer() {
             const input = document.getElementById('answerInput');
             const answer = input.value.trim();
@@ -882,31 +714,26 @@
             checkBothAnswersReady();
         }
 
-        // Verifica se ambas as respostas estão prontas
         function checkBothAnswersReady() {
             if (gameState.currentQuestion && 
                 gameState.currentQuestion.humanAnswer && 
                 gameState.currentQuestion.aiAnswer) {
                 
-                // Adiciona à lista de perguntas completas
                 gameState.questions.push(gameState.currentQuestion);
                 gameState.currentQuestion = null;
                 gameState.waitingForAnswers = false;
                 
                 saveGameState();
-                
-                // Atualiza ambas as interfaces
                 loadPresenterMessages();
                 loadResponderMessages();
             }
         }
 
-        // Carrega mensagens do apresentador
+        // Carregamento de mensagens
         function loadPresenterMessages() {
             const container = document.getElementById('presenterMessages');
             container.innerHTML = '';
             
-            // Mostra perguntas e respostas completas
             gameState.questions.forEach((q, index) => {
                 // Pergunta
                 const questionDiv = document.createElement('div');
@@ -914,7 +741,7 @@
                 questionDiv.innerHTML = `<div class="bubble">${q.text}</div>`;
                 container.appendChild(questionDiv);
                 
-                // Respostas (embaralhadas aleatoriamente)
+                // Respostas embaralhadas
                 const answersDiv = document.createElement('div');
                 answersDiv.className = 'message';
                 
@@ -923,7 +750,6 @@
                     { label: 'Respondente 2', text: q.aiAnswer }
                 ];
                 
-                // Embaralha as respostas baseado no índice da pergunta para consistência
                 if (index % 2 === 1) answers.reverse();
                 
                 answersDiv.innerHTML = `
@@ -941,7 +767,7 @@
                 container.appendChild(answersDiv);
             });
             
-            // Pergunta atual (aguardando respostas)
+            // Pergunta atual
             if (gameState.currentQuestion) {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'message question';
@@ -959,12 +785,10 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Carrega mensagens do respondente
         function loadResponderMessages() {
             const container = document.getElementById('responderMessages');
             container.innerHTML = '';
             
-            // Mostra apenas as perguntas
             gameState.questions.forEach(q => {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'message';
@@ -972,7 +796,6 @@
                 container.appendChild(questionDiv);
             });
             
-            // Pergunta atual
             if (gameState.currentQuestion) {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'message';
@@ -990,11 +813,75 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Atualiza status
+        // Configurações gerais
+        function toggleAutoClear() {
+            autoClear = document.getElementById('autoClearCheck').checked;
+            localStorage.setItem('auto_clear', autoClear);
+        }
+
+        function clearChat() {
+            if (confirm('Limpar toda a conversa?')) {
+                gameState = {
+                    questions: [],
+                    currentQuestion: null,
+                    waitingForAnswers: false
+                };
+                
+                sessionStartTime = Date.now();
+                saveGameState();
+                
+                loadPresenterMessages();
+                loadResponderMessages();
+                updateStats();
+                
+                alert('Chat limpo!');
+            }
+        }
+
+        function exportChat() {
+            if (gameState.questions.length === 0) {
+                alert('Não há conversas para exportar.');
+                return;
+            }
+
+            let text = `TESTE DE TURING - ${new Date().toLocaleString()}\n`;
+            text += `Perguntas: ${gameState.questions.length}\n\n`;
+            
+            gameState.questions.forEach((q, i) => {
+                text += `PERGUNTA ${i + 1}: ${q.text}\n`;
+                text += `RESPONDENTE 1: ${q.humanAnswer}\n`;
+                text += `RESPONDENTE 2: ${q.aiAnswer}\n\n`;
+            });
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `teste-turing-${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function updateStats() {
+            document.getElementById('questionCount').textContent = gameState.questions.length;
+            const elapsed = Date.now() - sessionStartTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            document.getElementById('sessionTime').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
         function updateStatus() {
             const status = document.getElementById('status');
             if (currentRole) {
-                status.textContent = `Conectado como ${currentRole === 'presenter' ? 'Apresentador' : 'Respondente'}`;
+                const roleNames = {
+                    presenter: 'Apresentador',
+                    responder: 'Respondente',
+                    config: 'Configuração',
+                    personality: 'Personalidade',
+                    settings: 'Configurações'
+                };
+                status.textContent = `Conectado como ${roleNames[currentRole]}`;
                 status.className = 'status connected';
             } else {
                 status.textContent = 'Selecione seu papel';
@@ -1003,17 +890,19 @@
         }
 
         // Event listeners
-        document.getElementById('questionInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendQuestion();
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            
+            document.getElementById('questionInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendQuestion();
+            });
+
+            document.getElementById('answerInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendAnswer();
+            });
         });
 
-        document.getElementById('answerInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendAnswer();
-        });
-
-        document.getElementById('temperatureSlider').addEventListener('input', updateTemperatureDisplay);
-
-        // Atualização em tempo real (simula comunicação entre telas)
+        // Atualização periódica
         setInterval(() => {
             if (currentRole === 'presenter') {
                 loadPresenterMessages();
@@ -1023,10 +912,6 @@
                 updateStats();
             }
         }, 2000);
-
-        // Inicialização
-        loadGameState();
-        updateStatus();
     </script>
 </body>
 </html>
