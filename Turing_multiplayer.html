@@ -4,6 +4,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Teste de Turing - Multiplayer</title>
+        
+        <!-- Supabase SDK -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.0/supabase.min.js"></script>
         <style>
             * {
                 margin: 0;
@@ -510,10 +513,15 @@
             let sessionStartTime = Date.now();
             let autoClear = localStorage.getItem('auto_clear') === 'true';
             
-            // Multiplayer simples via localStorage compartilhado
+            // Multiplayer via Supabase
             let currentRoom = localStorage.getItem('current_room') || null;
             let isConnected = false;
-            let pollInterval = null;
+            let supabase = null;
+            let realtimeChannel = null;
+
+            // Configuração Supabase
+            const SUPABASE_URL = 'https://ocqosdtvnsnlwagvofan.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcW9zZHR2bnNubHdhZ3ZvZmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1NDI3NzEsImV4cCI6MjA2MjExODc3MX0.SUMylY0oR1GJmrXqd9yhIUtKdInifUsZKt4XUvJN1T8';
 
             // Estado do jogo
             let gameState = {
@@ -640,76 +648,242 @@
                 }
             }
 
-            // Sistema de salas simples
-            function createRoom() {
-                const roomCode = 'SALA' + Math.random().toString(36).substr(2, 4).toUpperCase();
-                currentRoom = roomCode;
-                localStorage.setItem('current_room', roomCode);
-                localStorage.setItem('room_' + roomCode, JSON.stringify({
-                    created: Date.now(),
-                    participants: 1,
-                    gameState: gameState
-                }));
-                
-                isConnected = true;
-                document.getElementById('currentRoomCode').textContent = roomCode;
-                updateConnectionStatus();
-                startPolling();
-                
-                alert(`Sala criada: ${roomCode}\nCompartilhe este código com outros participantes!`);
+            // Inicializar Supabase
+            function initSupabase() {
+                try {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('Supabase inicializado com sucesso');
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao inicializar Supabase:', error);
+                    alert('Erro ao conectar com o servidor. Verifique sua conexão.');
+                    return false;
+                }
             }
 
-            function joinRoom() {
+            // Sistema de salas com Supabase
+            async function createRoom() {
+                if (!supabase) {
+                    alert('Erro de conexão. Recarregue a página.');
+                    return;
+                }
+
+                const roomCode = 'SALA' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('turing_rooms')
+                        .insert([{
+                            room_code: roomCode,
+                            game_state: gameState,
+                            participants: 1
+                        }])
+                        .select();
+
+                    if (error) {
+                        if (error.code === '42P01') {
+                            // Tabela não existe, vamos criar
+                            await createTable();
+                            // Tenta novamente
+                            return createRoom();
+                        }
+                        throw error;
+                    }
+
+                    currentRoom = roomCode;
+                    localStorage.setItem('current_room', roomCode);
+                    
+                    isConnected = true;
+                    document.getElementById('currentRoomCode').textContent = roomCode;
+                    updateConnectionStatus();
+                    setupRealtime();
+                    
+                    alert(`Sala criada: ${roomCode}\nCompartilhe este código com outros participantes!`);
+                } catch (error) {
+                    console.error('Erro ao criar sala:', error);
+                    alert('Erro ao criar sala: ' + error.message);
+                }
+            }
+
+            async function createTable() {
+                try {
+                    // Esta função seria executada via SQL no Supabase Dashboard
+                    alert('Primeira execução detectada!\n\nPor favor, execute este SQL no seu Supabase Dashboard (SQL Editor):\n\nCREATE TABLE turing_rooms (\n  id SERIAL PRIMARY KEY,\n  room_code TEXT UNIQUE NOT NULL,\n  game_state JSONB NOT NULL DEFAULT \'{}\',\n  participants INTEGER DEFAULT 1,\n  created_at TIMESTAMP DEFAULT NOW(),\n  updated_at TIMESTAMP DEFAULT NOW()\n);\n\nENABLE ROW LEVEL SECURITY ON turing_rooms;\n\nCREATE POLICY "Allow all operations" ON turing_rooms FOR ALL USING (true);\n\nDepois clique OK e tente criar a sala novamente.');
+                } catch (error) {
+                    console.error('Erro na criação da tabela:', error);
+                }
+            }
+
+            async function joinRoom() {
                 const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
                 if (!roomCode) {
                     alert('Digite um código de sala válido!');
                     return;
                 }
-                
-                // Verifica se a sala existe
-                const roomData = localStorage.getItem('room_' + roomCode);
-                if (!roomData) {
-                    alert('Sala não encontrada! Verifique o código ou peça ao apresentador para criar uma nova sala.');
+
+                if (!supabase) {
+                    alert('Erro de conexão. Recarregue a página.');
                     return;
                 }
                 
-                currentRoom = roomCode;
-                localStorage.setItem('current_room', roomCode);
-                
-                // Atualiza participantes
-                const room = JSON.parse(roomData);
-                room.participants = (room.participants || 1) + 1;
-                localStorage.setItem('room_' + roomCode, JSON.stringify(room));
-                
-                isConnected = true;
-                document.getElementById('currentRoomCode').textContent = roomCode;
-                updateConnectionStatus();
-                startPolling();
-                
-                // Carrega estado da sala
-                loadGameState();
-                alert(`Conectado à sala: ${roomCode}`);
+                try {
+                    // Verifica se a sala existe
+                    const { data, error } = await supabase
+                        .from('turing_rooms')
+                        .select('*')
+                        .eq('room_code', roomCode)
+                        .single();
+
+                    if (error || !data) {
+                        alert('Sala não encontrada! Verifique o código ou peça ao apresentador para criar uma nova sala.');
+                        return;
+                    }
+
+                    // Atualiza participantes
+                    await supabase
+                        .from('turing_rooms')
+                        .update({ 
+                            participants: (data.participants || 1) + 1,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('room_code', roomCode);
+
+                    currentRoom = roomCode;
+                    localStorage.setItem('current_room', roomCode);
+                    
+                    isConnected = true;
+                    document.getElementById('currentRoomCode').textContent = roomCode;
+                    updateConnectionStatus();
+                    setupRealtime();
+                    
+                    // Carrega estado da sala
+                    gameState = data.game_state || gameState;
+                    updateGameDisplay();
+                    
+                    alert(`Conectado à sala: ${roomCode}`);
+                } catch (error) {
+                    console.error('Erro ao entrar na sala:', error);
+                    alert('Erro ao entrar na sala: ' + error.message);
+                }
             }
 
-            function leaveRoom() {
-                if (!currentRoom) return;
+            async function leaveRoom() {
+                if (!currentRoom || !supabase) return;
                 
-                // Diminui participantes
-                const roomData = localStorage.getItem('room_' + currentRoom);
-                if (roomData) {
-                    const room = JSON.parse(roomData);
-                    room.participants = Math.max(0, (room.participants || 1) - 1);
-                    localStorage.setItem('room_' + currentRoom, JSON.stringify(room));
+                try {
+                    // Diminui participantes
+                    const { data } = await supabase
+                        .from('turing_rooms')
+                        .select('participants')
+                        .eq('room_code', currentRoom)
+                        .single();
+
+                    if (data) {
+                        await supabase
+                            .from('turing_rooms')
+                            .update({ 
+                                participants: Math.max(0, (data.participants || 1) - 1),
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('room_code', currentRoom);
+                    }
+                } catch (error) {
+                    console.error('Erro ao sair da sala:', error);
                 }
                 
                 currentRoom = null;
                 localStorage.removeItem('current_room');
                 isConnected = false;
-                stopPolling();
+                
+                if (realtimeChannel) {
+                    supabase.removeChannel(realtimeChannel);
+                    realtimeChannel = null;
+                }
                 
                 document.getElementById('currentRoomCode').textContent = '';
                 updateConnectionStatus();
                 alert('Desconectado da sala.');
+            }
+
+            // Setup real-time subscription
+            function setupRealtime() {
+                if (!supabase || !currentRoom) return;
+
+                // Remove canal anterior se existir
+                if (realtimeChannel) {
+                    supabase.removeChannel(realtimeChannel);
+                }
+
+                // Cria novo canal real-time
+                realtimeChannel = supabase
+                    .channel(`room_${currentRoom}`)
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: 'UPDATE',
+                            schema: 'public',
+                            table: 'turing_rooms',
+                            filter: `room_code=eq.${currentRoom}`
+                        },
+                        (payload) => {
+                            console.log('Recebida atualização:', payload);
+                            
+                            // Atualiza estado local
+                            if (payload.new && payload.new.game_state) {
+                                gameState = payload.new.game_state;
+                                updateGameDisplay();
+                                updateStats();
+                            }
+                        }
+                    )
+                    .subscribe();
+
+                console.log('Real-time configurado para sala:', currentRoom);
+            }
+
+            // Salvar estado no Supabase
+            async function saveGameState() {
+                if (!currentRoom || !supabase) {
+                    return; // Fallback para localStorage se não conectado
+                }
+                
+                try {
+                    const { error } = await supabase
+                        .from('turing_rooms')
+                        .update({ 
+                            game_state: gameState,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('room_code', currentRoom);
+
+                    if (error) {
+                        console.error('Erro ao salvar estado:', error);
+                    }
+                } catch (error) {
+                    console.error('Erro de conexão ao salvar:', error);
+                }
+            }
+
+            async function loadGameState() {
+                if (!currentRoom || !supabase) return;
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('turing_rooms')
+                        .select('game_state, participants')
+                        .eq('room_code', currentRoom)
+                        .single();
+
+                    if (data && data.game_state) {
+                        gameState = data.game_state;
+                        updateGameDisplay();
+                        
+                        // Atualiza contador de participantes
+                        document.getElementById('participantsCount').textContent = data.participants || 0;
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar estado:', error);
+                }
             }
 
             function updateConnectionStatus() {
@@ -719,76 +893,29 @@
                 
                 if (isConnected && currentRoom) {
                     statusDot.classList.add('connected');
-                    statusText.textContent = `Conectado à sala: ${currentRoom}`;
+                    statusText.textContent = `✅ Conectado à sala: ${currentRoom} (Supabase Real-time)`;
                     roomInfo.style.display = 'block';
-                    
-                    // Conta participantes
-                    const roomData = localStorage.getItem('room_' + currentRoom);
-                    const participants = roomData ? JSON.parse(roomData).participants || 1 : 1;
-                    document.getElementById('participantsCount').textContent = participants;
                 } else {
                     statusDot.classList.remove('connected');
-                    statusText.textContent = 'Desconectado - Entre em uma sala para começar';
+                    statusText.textContent = '🔴 Desconectado - Entre em uma sala para começar';
                     roomInfo.style.display = 'none';
                 }
             }
 
             // Sistema de polling para sincronização
             function startPolling() {
-                if (pollInterval) clearInterval(pollInterval);
-                pollInterval = setInterval(() => {
-                    if (currentRoom) {
-                        syncGameState();
-                    }
-                }, 1000); // Verifica a cada segundo
+                // Não mais necessário com Supabase Real-time
+                console.log('Usando Supabase Real-time - polling desabilitado');
             }
 
             function stopPolling() {
-                if (pollInterval) {
-                    clearInterval(pollInterval);
-                    pollInterval = null;
-                }
+                // Não mais necessário com Supabase Real-time  
+                console.log('Usando Supabase Real-time - polling desabilitado');
             }
 
             function syncGameState() {
-                if (!currentRoom) return;
-                
-                const roomData = localStorage.getItem('room_' + currentRoom);
-                if (roomData) {
-                    const room = JSON.parse(roomData);
-                    if (room.gameState) {
-                        // Atualiza estado local se houver mudanças
-                        const remoteState = room.gameState;
-                        if (JSON.stringify(gameState) !== JSON.stringify(remoteState)) {
-                            gameState = remoteState;
-                            updateGameDisplay();
-                        }
-                    }
-                }
-            }
-
-            function saveGameState() {
-                if (!currentRoom) return;
-                
-                const roomData = localStorage.getItem('room_' + currentRoom);
-                if (roomData) {
-                    const room = JSON.parse(roomData);
-                    room.gameState = gameState;
-                    localStorage.setItem('room_' + currentRoom, JSON.stringify(room));
-                }
-            }
-
-            function loadGameState() {
-                if (!currentRoom) return;
-                
-                const roomData = localStorage.getItem('room_' + currentRoom);
-                if (roomData) {
-                    const room = JSON.parse(roomData);
-                    if (room.gameState) {
-                        gameState = room.gameState;
-                        updateGameDisplay();
-                    }
-                }
+                // Não mais necessário - Supabase faz automaticamente
+                console.log('Sync automático via Supabase Real-time');
             }
 
             // Gerenciamento de papéis
@@ -832,7 +959,7 @@
                 if (currentRole === 'presenter') {
                     questionSection.style.display = 'block';
                 } else if (currentRole === 'human') {
-                    if (gameState.currentQuestion.text && !gameState.currentQuestion.humanAnswer) {
+                    if (gameState.currentQuestion.text && !gameState.currentQuestion.humanReady) {
                         answerSection.style.display = 'block';
                         document.getElementById('currentQuestionText').textContent = gameState.currentQuestion.text;
                     }
@@ -846,16 +973,27 @@
                     // Atualiza respostas
                     const response1 = document.getElementById('response1');
                     const response2 = document.getElementById('response2');
+                    const question = gameState.currentQuestion;
                     
-                    // Randomiza quem aparece em qual posição
-                    const isHumanFirst = Math.random() > 0.5;
-                    
-                    if (isHumanFirst) {
-                        response1.textContent = gameState.currentQuestion.humanAnswer || 'Aguardando resposta...';
-                        response2.textContent = gameState.currentQuestion.aiAnswer || 'Aguardando resposta...';
+                    // Só mostra respostas se ambas estão prontas E reveladas
+                    if (question.revealed && question.humanAnswer && question.aiAnswer) {
+                        // Randomiza quem aparece em qual posição
+                        const isHumanFirst = Math.random() > 0.5;
+                        
+                        if (isHumanFirst) {
+                            response1.textContent = question.humanAnswer;
+                            response2.textContent = question.aiAnswer;
+                        } else {
+                            response1.textContent = question.aiAnswer;
+                            response2.textContent = question.humanAnswer;
+                        }
                     } else {
-                        response1.textContent = gameState.currentQuestion.aiAnswer || 'Aguardando resposta...';
-                        response2.textContent = gameState.currentQuestion.humanAnswer || 'Aguardando resposta...';
+                        // Mostra status de carregamento
+                        const humanStatus = question.humanReady ? '✅ Humano respondeu' : '⏳ Aguardando humano...';
+                        const aiStatus = question.aiReady ? '✅ IA respondeu' : '⏳ Aguardando IA...';
+                        
+                        response1.textContent = humanStatus;
+                        response2.textContent = aiStatus;
                     }
                 }
             }
@@ -871,6 +1009,9 @@
                     text: questionText,
                     humanAnswer: '',
                     aiAnswer: '',
+                    humanReady: false,
+                    aiReady: false,
+                    revealed: false,
                     timestamp: Date.now()
                 };
                 
@@ -878,7 +1019,7 @@
                 saveGameState();
                 updateGameDisplay();
                 
-                // Gera resposta da IA automaticamente
+                // Gera resposta da IA automaticamente (mas fica escondida)
                 generateAIResponse(questionText);
             }
 
@@ -890,6 +1031,7 @@
                 }
                 
                 gameState.currentQuestion.humanAnswer = answerText;
+                gameState.currentQuestion.humanReady = true;
                 document.getElementById('humanAnswerInput').value = '';
                 saveGameState();
                 updateGameDisplay();
@@ -898,7 +1040,14 @@
             }
 
             function checkBothAnswersReady() {
-                if (gameState.currentQuestion.humanAnswer && gameState.currentQuestion.aiAnswer) {
+                const question = gameState.currentQuestion;
+                
+                // Só revela quando AMBOS estão prontos
+                if (question.humanReady && question.aiReady && !question.revealed) {
+                    question.revealed = true;
+                    saveGameState();
+                    updateGameDisplay();
+                    
                     // Adiciona à lista de perguntas completas
                     gameState.questions.push({...gameState.currentQuestion});
                     updateStats();
@@ -918,6 +1067,9 @@
                     text: '',
                     humanAnswer: '',
                     aiAnswer: '',
+                    humanReady: false,
+                    aiReady: false,
+                    revealed: false,
                     timestamp: 0
                 };
                 saveGameState();
@@ -930,6 +1082,9 @@
                     text: '',
                     humanAnswer: '',
                     aiAnswer: '',
+                    humanReady: false,
+                    aiReady: false,
+                    revealed: false,
                     timestamp: 0
                 };
                 sessionStartTime = Date.now();
@@ -983,6 +1138,7 @@
                     
                     if (data.choices && data.choices[0]) {
                         gameState.currentQuestion.aiAnswer = data.choices[0].message.content;
+                        gameState.currentQuestion.aiReady = true;
                         saveGameState();
                         updateGameDisplay();
                         checkBothAnswersReady();
@@ -992,6 +1148,7 @@
                 } catch (error) {
                     console.error('Erro IA:', error);
                     gameState.currentQuestion.aiAnswer = `Erro: ${error.message}`;
+                    gameState.currentQuestion.aiReady = true;
                     saveGameState();
                     updateGameDisplay();
                     checkBothAnswersReady();
@@ -1131,9 +1288,10 @@
                 const seconds = elapsed % 60;
                 document.getElementById('sessionTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 
-                const roomData = currentRoom ? localStorage.getItem('room_' + currentRoom) : null;
-                const participants = roomData ? JSON.parse(roomData).participants || 0 : 0;
-                document.getElementById('participantsCount').textContent = participants;
+                // Participantes será atualizado via real-time do Supabase
+                if (!isConnected) {
+                    document.getElementById('participantsCount').textContent = '0';
+                }
             }
 
             function toggleAutoClear() {
@@ -1147,6 +1305,12 @@
 
             // Inicialização
             function init() {
+                // Inicializa Supabase primeiro
+                if (!initSupabase()) {
+                    console.error('Falha ao inicializar Supabase');
+                    return;
+                }
+                
                 updateConnectionStatus();
                 updateStats();
                 loadPersonalitySettings();
@@ -1155,12 +1319,8 @@
                 
                 // Auto-conecta se havia sala
                 if (currentRoom) {
-                    isConnected = true;
-                    document.getElementById('currentRoomCode').textContent = currentRoom;
-                    document.getElementById('roomCodeInput').value = currentRoom;
-                    updateConnectionStatus();
-                    startPolling();
-                    loadGameState();
+                    // Tenta reconectar à sala existente
+                    joinRoom();
                 }
                 
                 // Timer para atualizar stats
