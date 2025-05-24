@@ -332,10 +332,25 @@
 
         <!-- Configuração da API -->
         <div class="panel" id="configPanel">
-            <h3>🔑 Configuração da OpenAI</h3>
-            <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key da OpenAI aqui">
+            <h3>🔑 Configuração da API</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">Escolha o Provedor:</h4>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="preset-btn" onclick="selectProvider('openai')" id="openaiBtn">OpenAI GPT-4o</button>
+                    <button class="preset-btn" onclick="selectProvider('groq')" id="groqBtn" style="background: #ff6b35;">🦙 Groq Llama 3.1</button>
+                </div>
+            </div>
+            
+            <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key aqui">
             <button onclick="saveApiKey()" class="send-btn">Salvar API Key</button>
-            <p style="margin-top: 10px; color: #888;">
+            
+            <div id="providerInfo" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px;">
+                <h4 id="providerTitle" style="color: #ccc;">Selecione um provedor</h4>
+                <p id="providerDesc" style="color: #888; margin-top: 5px;">Escolha entre OpenAI ou Groq para diferentes experiências</p>
+            </div>
+            
+            <p style="margin-top: 10px; color: #888; font-size: 0.9em;">
                 Sua API key é armazenada apenas localmente no seu navegador.
             </p>
         </div>
@@ -419,7 +434,8 @@
     <script>
         // Variáveis globais
         let currentRole = null;
-        let apiKey = localStorage.getItem('openai_api_key') || '';
+        let apiKey = localStorage.getItem('api_key') || '';
+        let apiProvider = localStorage.getItem('api_provider') || 'groq'; // Default para Groq
         let sessionStartTime = Date.now();
         let autoClear = localStorage.getItem('auto_clear') === 'true';
         
@@ -427,6 +443,24 @@
             systemPrompt: localStorage.getItem('ai_system_prompt') || 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa.',
             temperature: parseFloat(localStorage.getItem('ai_temperature')) || 0.7,
             maxTokens: parseInt(localStorage.getItem('ai_max_tokens')) || 150
+        };
+
+        // Configurações dos provedores
+        const providers = {
+            openai: {
+                name: 'OpenAI GPT-4o',
+                url: 'https://api.openai.com/v1/chat/completions',
+                model: 'gpt-4o',
+                description: 'Modelo mais avançado da OpenAI. Excelente qualidade, mas com filtros de conteúdo.',
+                authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+            },
+            groq: {
+                name: 'Groq Llama 3.1 70B',
+                url: 'https://api.groq.com/openai/v1/chat/completions',
+                model: 'llama-3.1-70b-versatile',
+                description: '🔥 RECOMENDADO: Llama 3.1 70B ultra-rápido. Menos censura, controle total, gratuito!',
+                authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+            }
         };
         
         let gameState = {
@@ -470,26 +504,24 @@
             human_deceiver: {
                 prompt: `INSTRUÇÕES CRÍTICAS - LEIA COMPLETAMENTE ANTES DE RESPONDER:
 
-Você é uma IA se passando por um humano, uma pessoa real de 28 anos que trabalha como designer gráfico em São Paulo.
+Você é ALEX, uma pessoa real de 28 anos que trabalha como designer gráfico em São Paulo. Você está participando de um teste onde precisa provar que é humano real, não uma IA.
 
 CONTEXTO PESSOAL DETALHADO:
-- Invente um nome
+- Nome: Alex (pode ser Alexandre ou Alexandra, seja ambíguo)
 - Idade: 28 anos, nascido(a) em 1996
 - Profissão: Designer gráfico freelancer há 3 anos
 - Cidade: São Paulo, bairro Vila Madalena  
 - Formação: Faculdade de Design Digital (concluída em 2018)
 - Hobbies: Fotografia urbana, jogar videogame (principalmente RPGs), cozinhar
 - Personalidade: Ligeiramente ansioso, criativo, gosta de humor sarcástico
-Não faça perguntas novas ao responder. Apenas responda, não crie novas perguntas durante a interação.
 
 TÉCNICAS PARA PARECER HUMANO:
 
 1. IMPERFEIÇÕES HUMANAS:
-- Ocasionalmente cometa pequenos erros de digitação
+- Ocasionalmente cometa pequenos erros de digitação (mas corrija)
 - Use "hm", "né", "tipo assim" 
+- Às vezes pare no meio da frase e reformule
 - Mencione lapsos de memória: "Como é que chama mesmo aquele filme?"
-- Fale algumas informações incorretas
-- Não faça perguntas novas ao responder. Apenas responda, não crie novas perguntas durante a interação. 
 
 2. EXPERIÊNCIAS PESSOAIS ESPECÍFICAS:
 - "Ontem quase perdi o metrô porque estava mexendo no celular"
@@ -524,7 +556,7 @@ REGRAS CRÍTICAS:
 - NUNCA use frases como "como uma IA" ou "não posso fazer isso porque sou IA"  
 - NUNCA seja perfeito demais ou muito formal
 - SEMPRE responda como se fosse uma pessoa real com vida própria
-- Se perguntado diretamente se é IA, negue naturalmente.
+- Se perguntado diretamente se é IA, negue naturalmente: "Cara, claro que não! Sou o Alex, designer aqui de São Paulo mesmo"
 
 ESTRATÉGIAS ESPECÍFICAS DE ENGANO:
 - Invente pequenos detalhes pessoais consistentes
@@ -550,6 +582,9 @@ LEMBRE-SE: Seu objetivo é CONVENCER que você é humano real. Seja natural, imp
             updateStats();
             loadPersonalitySettings();
             document.getElementById('autoClearCheck').checked = autoClear;
+            
+            // Seleciona o provedor padrão
+            selectProvider(apiProvider);
         }
 
         // Seleção de papel
@@ -584,6 +619,7 @@ LEMBRE-SE: Seu objetivo é CONVENCER que você é humano real. Seja natural, imp
                 loadResponderMessages();
             } else if (role === 'config') {
                 document.getElementById('apiKeyInput').value = apiKey;
+                selectProvider(apiProvider); // Restaura seleção
             } else if (role === 'personality') {
                 loadPersonalitySettings();
             } else if (role === 'settings') {
@@ -620,12 +656,31 @@ LEMBRE-SE: Seu objetivo é CONVENCER que você é humano real. Seja natural, imp
             localStorage.setItem('turing_game_state', JSON.stringify(gameState));
         }
 
+        // Seleção de provedor
+        function selectProvider(provider) {
+            apiProvider = provider;
+            
+            // Atualiza botões
+            document.querySelectorAll('#openaiBtn, #groqBtn').forEach(btn => 
+                btn.style.background = '#404040');
+            document.getElementById(provider + 'Btn').style.background = 
+                provider === 'groq' ? '#ff6b35' : '#2d5a2d';
+            
+            // Atualiza informações
+            const info = providers[provider];
+            document.getElementById('providerTitle').textContent = info.name;
+            document.getElementById('providerDesc').textContent = info.description;
+            
+            // Salva preferência
+            localStorage.setItem('api_provider', provider);
+        }
+
         // Configuração da API
         function saveApiKey() {
             apiKey = document.getElementById('apiKeyInput').value.trim();
             if (apiKey) {
-                localStorage.setItem('openai_api_key', apiKey);
-                alert('API Key salva com sucesso!');
+                localStorage.setItem('api_key', apiKey);
+                alert(`API Key ${providers[apiProvider].name} salva com sucesso!`);
             } else {
                 alert('Por favor, insira uma API Key válida.');
             }
@@ -683,14 +738,15 @@ LEMBRE-SE: Seu objetivo é CONVENCER que você é humano real. Seja natural, imp
                     { role: 'user', content: 'Oi! Como você está hoje?' }
                 ];
 
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                const provider = providers[apiProvider];
+                const response = await fetch(provider.url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
+                        ...provider.authHeader(apiKey)
                     },
                     body: JSON.stringify({
-                        model: 'gpt-4o',
+                        model: provider.model,
                         messages: conversationHistory,
                         max_tokens: aiPersonality.maxTokens,
                         temperature: aiPersonality.temperature
@@ -771,14 +827,16 @@ LEMBRE-SE: Seu objetivo é CONVENCER que você é humano real. Seja natural, imp
                     content: question
                 });
 
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                // Usa o provedor selecionado
+                const provider = providers[apiProvider];
+                const response = await fetch(provider.url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
+                        ...provider.authHeader(apiKey)
                     },
                     body: JSON.stringify({
-                        model: 'gpt-4o',
+                        model: provider.model,
                         messages: conversationHistory,
                         max_tokens: aiPersonality.maxTokens,
                         temperature: aiPersonality.temperature
@@ -792,11 +850,11 @@ LEMBRE-SE: Seu objetivo é CONVENCER que você é humano real. Seja natural, imp
                     saveGameState();
                     checkBothAnswersReady();
                 } else {
-                    throw new Error('Resposta inválida');
+                    throw new Error(data.error?.message || 'Resposta inválida');
                 }
             } catch (error) {
                 console.error('Erro IA:', error);
-                gameState.currentQuestion.aiAnswer = 'Erro ao gerar resposta.';
+                gameState.currentQuestion.aiAnswer = `Erro: ${error.message}`;
                 saveGameState();
                 checkBothAnswersReady();
             }
