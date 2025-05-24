@@ -1,4 +1,56 @@
-<!DOCTYPE html>
+        <!-- Configuração -->
+        <div class="config-panel" id="configPanel">
+            <h3>🔑 Configuração da OpenAI</h3>
+            <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key da OpenAI aqui">
+            <button onclick="saveApiKey()" class="send-btn">Salvar API Key</button>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #888;">
+                Sua API key é armazenada apenas localmente no seu navegador.
+            </p>
+        </div>
+
+        <!-- Configuração da Personalidade -->
+        <div class="config-panel" id="personalityPanel">
+            <h3>🎭 Configurar Personalidade da IA</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">Personalidades Pré-definidas:</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <button class="personality-preset" onclick="loadPersonality('casual')">😊 Casual</button>
+                    <button class="personality-preset" onclick="loadPersonality('formal')">🎩 Formal</button>
+                    <button class="personality-preset" onclick="loadPersonality('teenager')">😎 Adolescente</button>
+                    <button class="personality-preset" onclick="loadPersonality('professor')">👨‍🏫 Professor</button>
+                    <button class="personality-preset" onclick="loadPersonality('comedian')">😂 Comediante</button>
+                    <button class="personality-preset" onclick="loadPersonality('robot')">🤖 Robótico</button>
+                </div>
+            </div>
+
+            <label style="color: #ccc; display: block; margin-bottom: 5px;">Prompt do Sistema (Como a IA deve se comportar):</label>
+            <textarea id="systemPromptInput" class="config-input" rows="6" style="resize: vertical;" 
+                placeholder="Ex: Você é um jovem de 20 anos, descontraído e usa gírias. Responda de forma natural e informal, como se estivesse conversando com amigos..."></textarea>
+            
+            <label style="color: #ccc; display: block; margin-bottom: 5px; margin-top: 15px;">Configurações Avançadas:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="color: #999; font-size: 0.9em;">Temperatura (Criatividade):</label>
+                    <input type="range" id="temperatureSlider" min="0" max="1" step="0.1" value="0.7" class="config-input">
+                    <span id="temperatureValue" style="color: #ccc;">0.7</span>
+                </div>
+                <div>
+                    <label style="color: #999; font-size: 0.9em;">Máximo de Tokens:</label>
+                    <input type="number" id="maxTokensInput" value="150" min="50" max="500" class="config-input">
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="savePersonality()" class="send-btn" style="margin-right: 10px;">Salvar Personalidade</button>
+                <button onclick="testPersonality()" class="send-btn" style="background: #2d5a2d;">Testar</button>
+            </div>
+
+            <div id="testResult" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px; display: none;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">Teste da Personalidade:</h4>
+                <div id="testResponse" style="color: #e0e0e0;"></div>
+            </div>
+        </div><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -251,6 +303,22 @@
 
         .status.connected { background: #2d5a2d; }
         .status.disconnected { background: #5a2d2d; }
+
+        .personality-preset {
+            padding: 8px 12px;
+            background: #404040;
+            border: none;
+            color: #e0e0e0;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .personality-preset:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -264,16 +332,51 @@
             <button class="role-btn" onclick="selectRole('presenter')">Apresentador</button>
             <button class="role-btn" onclick="selectRole('responder')">Respondente</button>
             <button class="role-btn" onclick="selectRole('config')">Configurar API</button>
+            <button class="role-btn" onclick="selectRole('personality')">Personalidade IA</button>
         </div>
 
-        <!-- Configuração -->
-        <div class="config-panel" id="configPanel">
-            <h3>Configuração da OpenAI</h3>
-            <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key da OpenAI aqui">
-            <button onclick="saveApiKey()" class="send-btn">Salvar</button>
-            <p style="margin-top: 10px; font-size: 0.9em; color: #888;">
-                Sua API key é armazenada apenas localmente no seu navegador.
-            </p>
+        <!-- Configuração da Personalidade -->
+        <div class="config-panel" id="personalityPanel">
+            <h3>🎭 Configurar Personalidade da IA</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">Personalidades Pré-definidas:</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <button class="personality-preset" onclick="loadPersonality('casual')">😊 Casual</button>
+                    <button class="personality-preset" onclick="loadPersonality('formal')">🎩 Formal</button>
+                    <button class="personality-preset" onclick="loadPersonality('teenager')">😎 Adolescente</button>
+                    <button class="personality-preset" onclick="loadPersonality('professor')">👨‍🏫 Professor</button>
+                    <button class="personality-preset" onclick="loadPersonality('comedian')">😂 Comediante</button>
+                    <button class="personality-preset" onclick="loadPersonality('robot')">🤖 Robótico</button>
+                </div>
+            </div>
+
+            <label style="color: #ccc; display: block; margin-bottom: 5px;">Prompt do Sistema (Como a IA deve se comportar):</label>
+            <textarea id="systemPromptInput" class="config-input" rows="6" style="resize: vertical;" 
+                placeholder="Ex: Você é um jovem de 20 anos, descontraído e usa gírias. Responda de forma natural e informal, como se estivesse conversando com amigos..."></textarea>
+            
+            <label style="color: #ccc; display: block; margin-bottom: 5px; margin-top: 15px;">Configurações Avançadas:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="color: #999; font-size: 0.9em;">Temperatura (Criatividade):</label>
+                    <input type="range" id="temperatureSlider" min="0" max="1" step="0.1" value="0.7" class="config-input">
+                    <span id="temperatureValue" style="color: #ccc;">0.7</span>
+                </div>
+                <div>
+                    <label style="color: #999; font-size: 0.9em;">Máximo de Tokens:</label>
+                    <input type="number" id="maxTokensInput" value="150" min="50" max="500" class="config-input">
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="savePersonality()" class="send-btn" style="margin-right: 10px;">Salvar Personalidade</button>
+                <button onclick="testPersonality()" class="send-btn" style="background: #2d5a2d;">Testar</button>
+            </div>
+
+            <div id="testResult" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px; display: none;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">Teste da Personalidade:</h4>
+                <div id="testResponse" style="color: #e0e0e0;"></div>
+            </div>
         </div>
 
         <!-- Chat do Apresentador -->
@@ -313,6 +416,11 @@
         // Simulação de WebSocket para comunicação entre as telas
         let currentRole = null;
         let apiKey = localStorage.getItem('openai_api_key') || '';
+        let aiPersonality = {
+            systemPrompt: localStorage.getItem('ai_system_prompt') || 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa. Evite soar muito formal ou robótico.',
+            temperature: parseFloat(localStorage.getItem('ai_temperature')) || 0.7,
+            maxTokens: parseInt(localStorage.getItem('ai_max_tokens')) || 150
+        };
         let gameState = {
             questions: [],
             currentQuestion: null,
@@ -354,6 +462,9 @@
             } else if (role === 'config') {
                 document.getElementById('configPanel').classList.add('active');
                 document.getElementById('apiKeyInput').value = apiKey;
+            } else if (role === 'personality') {
+                document.getElementById('personalityPanel').classList.add('active');
+                loadPersonalitySettings();
             }
             
             updateStatus();
@@ -367,6 +478,130 @@
                 alert('API Key salva com sucesso!');
             } else {
                 alert('Por favor, insira uma API Key válida.');
+            }
+        }
+
+        // Personalidades pré-definidas
+        const personalities = {
+            casual: {
+                prompt: 'Você é uma pessoa descontraída e amigável. Responda de forma natural, como se estivesse conversando com um amigo próximo. Use linguagem informal, mas seja respeitoso.',
+                temperature: 0.8,
+                maxTokens: 120
+            },
+            formal: {
+                prompt: 'Você é uma pessoa educada e formal. Responda sempre de maneira cortês, utilizando linguagem adequada e estruturada. Seja respeitoso e profissional.',
+                temperature: 0.5,
+                maxTokens: 180
+            },
+            teenager: {
+                prompt: 'Você é um adolescente de 17 anos, descolado e antenado. Use gírias da internet, seja divertido e responda como um jovem atual. Seja autêntico mas não exagere.',
+                temperature: 0.9,
+                maxTokens: 100
+            },
+            professor: {
+                prompt: 'Você é um professor experiente e sábio. Responda de forma educativa, sempre tentando ensinar algo interessante. Seja didático mas não condescendente.',
+                temperature: 0.6,
+                maxTokens: 200
+            },
+            comedian: {
+                prompt: 'Você tem um ótimo senso de humor e adora fazer piadas. Responda de forma engraçada sempre que possível, mas sem ser ofensivo. Seja espirituoso e divert ido.',
+                temperature: 0.9,
+                maxTokens: 130
+            },
+            robot: {
+                prompt: 'Você é claramente uma inteligência artificial. Responda de forma robótica, mencionando ocasionalmente que é uma IA. Use termos técnicos e seja preciso.',
+                temperature: 0.3,
+                maxTokens: 160
+            }
+        };
+
+        // Carregar personalidade pré-definida
+        function loadPersonality(type) {
+            const personality = personalities[type];
+            if (personality) {
+                document.getElementById('systemPromptInput').value = personality.prompt;
+                document.getElementById('temperatureSlider').value = personality.temperature;
+                document.getElementById('maxTokensInput').value = personality.maxTokens;
+                updateTemperatureDisplay();
+            }
+        }
+
+        // Carregar configurações de personalidade
+        function loadPersonalitySettings() {
+            document.getElementById('systemPromptInput').value = aiPersonality.systemPrompt;
+            document.getElementById('temperatureSlider').value = aiPersonality.temperature;
+            document.getElementById('maxTokensInput').value = aiPersonality.maxTokens;
+            updateTemperatureDisplay();
+        }
+
+        // Atualizar display da temperatura
+        function updateTemperatureDisplay() {
+            const value = document.getElementById('temperatureSlider').value;
+            document.getElementById('temperatureValue').textContent = value;
+        }
+
+        // Salvar personalidade
+        function savePersonality() {
+            aiPersonality.systemPrompt = document.getElementById('systemPromptInput').value;
+            aiPersonality.temperature = parseFloat(document.getElementById('temperatureSlider').value);
+            aiPersonality.maxTokens = parseInt(document.getElementById('maxTokensInput').value);
+
+            localStorage.setItem('ai_system_prompt', aiPersonality.systemPrompt);
+            localStorage.setItem('ai_temperature', aiPersonality.temperature);
+            localStorage.setItem('ai_max_tokens', aiPersonality.maxTokens);
+
+            alert('Personalidade da IA salva com sucesso!');
+        }
+
+        // Testar personalidade
+        async function testPersonality() {
+            if (!apiKey) {
+                alert('Configure sua API Key primeiro!');
+                return;
+            }
+
+            const testButton = event.target;
+            const originalText = testButton.textContent;
+            testButton.textContent = 'Testando...';
+            testButton.disabled = true;
+
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: aiPersonality.systemPrompt
+                            },
+                            {
+                                role: 'user',
+                                content: 'Oi! Como você está hoje?'
+                            }
+                        ],
+                        max_tokens: aiPersonality.maxTokens,
+                        temperature: aiPersonality.temperature
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices[0]) {
+                    document.getElementById('testResult').style.display = 'block';
+                    document.getElementById('testResponse').textContent = data.choices[0].message.content;
+                } else {
+                    alert('Erro no teste: ' + (data.error?.message || 'Resposta inválida'));
+                }
+            } catch (error) {
+                alert('Erro no teste: ' + error.message);
+            } finally {
+                testButton.textContent = originalText;
+                testButton.disabled = false;
             }
         }
 
@@ -414,15 +649,15 @@
                         messages: [
                             {
                                 role: 'system',
-                                content: 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa. Evite soar muito formal ou robótico.'
+                                content: aiPersonality.systemPrompt
                             },
                             {
                                 role: 'user',
                                 content: question
                             }
                         ],
-                        max_tokens: 150,
-                        temperature: 0.7
+                        max_tokens: aiPersonality.maxTokens,
+                        temperature: aiPersonality.temperature
                     })
                 });
 
@@ -586,6 +821,8 @@
         document.getElementById('answerInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendAnswer();
         });
+
+        document.getElementById('temperatureSlider').addEventListener('input', updateTemperatureDisplay);
 
         // Atualização em tempo real (simula comunicação entre telas)
         setInterval(() => {
