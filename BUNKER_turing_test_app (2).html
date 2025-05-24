@@ -112,48 +112,77 @@
             let tensionStartTime = null;
             let tensionInterval = null;
 
-            // Configuração Supabase (API REST direta)
+            // Configuração Supabase (API REST direta) - CORRIGIDA
             const SUPABASE_URL = 'https://ocqosdtvnsnlwagvofan.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcW9zZHR2bnNubHdhZ3ZvZmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1NDI3NzEsImV4cCI6MjA2MjExODc3MX0.SUMylY0oR1GJmrXqd9yhIUtKdInifUsZKt4XUvJN1T8';
 
-            // Cliente Supabase customizado (API REST)
+            // Cliente Supabase customizado (API REST) - VERSÃO CORRIGIDA
             const supabaseClient = {
                 async select(table, query = '*') {
+                    console.log(`🔍 SELECT ${table}: ${query}`);
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${query}`, {
                         headers: {
                             'apikey': SUPABASE_ANON_KEY,
                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         }
                     });
-                    return await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log(`✅ SELECT resultado:`, data);
+                    return data;
                 },
                 
                 async insert(table, data) {
+                    console.log(`📝 INSERT ${table}:`, data);
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
                         method: 'POST',
                         headers: {
                             'apikey': SUPABASE_ANON_KEY,
                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                             'Content-Type': 'application/json',
-                            'Prefer': 'return=representation'
+                            'Prefer': 'return=representation',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify(data)
                     });
-                    return await response.json();
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log(`✅ INSERT resultado:`, result);
+                    return result;
                 },
                 
                 async update(table, data, filter) {
+                    console.log(`🔄 UPDATE ${table} WHERE ${filter}:`, data);
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
                         method: 'PATCH',
                         headers: {
                             'apikey': SUPABASE_ANON_KEY,
                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify(data)
                     });
-                    return await response.json();
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log(`✅ UPDATE resultado:`, result);
+                    return result;
                 }
             };
 
