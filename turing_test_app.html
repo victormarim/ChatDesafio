@@ -1,4 +1,59 @@
-        <!-- Configuração -->
+<div id="testResult" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px; display: none;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">Teste da Personalidade:</h4>
+                <div id="testResponse" style="color: #e0e0e0;"></div>
+            </div>
+        </div>
+
+        <!-- Configurações Gerais -->
+        <div class="config-panel" id="settingsPanel">
+            <h3>⚙️ Configurações do Sistema</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 15px;">Gerenciar Conversas:</h4>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button onclick="clearChat()" class="send-btn" style="background: #5a2d2d;">🗑️ Limpar Chat Atual</button>
+                    <button onclick="exportChat()" class="send-btn" style="background: #2d5a2d;">📥 Exportar Conversa</button>
+                </div>
+                
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="color: #ccc; margin-bottom: 10px;">Limpeza Automática:</h4>
+                    <label style="display: flex; align-items: center; gap: 10px; color: #e0e0e0; cursor: pointer;">
+                        <input type="checkbox" id="autoClearCheck" onchange="toggleAutoClear()" style="transform: scale(1.2);">
+                        Limpar chat automaticamente ao atualizar a página
+                    </label>
+                    <p style="font-size: 0.9em; color: #888; margin-top: 8px;">
+                        ✅ Recomendado para apresentações entre diferentes turmas
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 15px;">Estatísticas da Sessão:</h4>
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                        <div>
+                            <div style="font-size: 1.5em; color: #4a9; font-weight: bold;" id="questionCount">0</div>
+                            <div style="color: #888; font-size: 0.9em;">Perguntas</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.5em; color: #94a; font-weight: bold;" id="sessionTime">00:00</div>
+                            <div style="color: #888; font-size: 0.9em;">Tempo de Sessão</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 15px;">Informações:</h4>
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; font-size: 0.9em; color: #ccc;">
+                    <p>• As configurações são salvas localmente no navegador</p>
+                    <p>• Cada aba/janela mantém uma sessão independente</p>
+                    <p>• API Key e personalidade ficam salvas entre sessões</p>
+                    <p>• Use o modo "Limpeza Automática" para apresentações</p>
+                </div>
+            </div>
+        </div>        <!-- Configuração -->
         <div class="config-panel" id="configPanel">
             <h3>🔑 Configuração da OpenAI</h3>
             <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key da OpenAI aqui">
@@ -46,9 +101,54 @@
                 <button onclick="testPersonality()" class="send-btn" style="background: #2d5a2d;">Testar</button>
             </div>
 
-            <div id="testResult" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px; display: none;">
-                <h4 style="color: #ccc; margin-bottom: 10px;">Teste da Personalidade:</h4>
-                <div id="testResponse" style="color: #e0e0e0;"></div>
+        <!-- Configurações Gerais -->
+        <div class="config-panel" id="settingsPanel">
+            <h3>⚙️ Configurações do Sistema</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 15px;">Gerenciar Conversas:</h4>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button onclick="clearChat()" class="send-btn" style="background: #5a2d2d;">🗑️ Limpar Chat Atual</button>
+                    <button onclick="exportChat()" class="send-btn" style="background: #2d5a2d;">📥 Exportar Conversa</button>
+                </div>
+                
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="color: #ccc; margin-bottom: 10px;">Limpeza Automática:</h4>
+                    <label style="display: flex; align-items: center; gap: 10px; color: #e0e0e0; cursor: pointer;">
+                        <input type="checkbox" id="autoClearCheck" onchange="toggleAutoClear()" style="transform: scale(1.2);">
+                        Limpar chat automaticamente ao atualizar a página
+                    </label>
+                    <p style="font-size: 0.9em; color: #888; margin-top: 8px;">
+                        ✅ Recomendado para apresentações entre diferentes turmas
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 15px;">Estatísticas da Sessão:</h4>
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                        <div>
+                            <div style="font-size: 1.5em; color: #4a9; font-weight: bold;" id="questionCount">0</div>
+                            <div style="color: #888; font-size: 0.9em;">Perguntas</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.5em; color: #94a; font-weight: bold;" id="sessionTime">00:00</div>
+                            <div style="color: #888; font-size: 0.9em;">Tempo de Sessão</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 15px;">Informações:</h4>
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; font-size: 0.9em; color: #ccc;">
+                    <p>• As configurações são salvas localmente no navegador</p>
+                    <p>• Cada aba/janela mantém uma sessão independente</p>
+                    <p>• API Key e personalidade ficam salvas entre sessões</p>
+                    <p>• Use o modo "Limpeza Automática" para apresentações</p>
+                </div>
             </div>
         </div><!DOCTYPE html>
 <html lang="pt-BR">
@@ -333,6 +433,7 @@
             <button class="role-btn" onclick="selectRole('responder')">Respondente</button>
             <button class="role-btn" onclick="selectRole('config')">Configurar API</button>
             <button class="role-btn" onclick="selectRole('personality')">Personalidade IA</button>
+            <button class="role-btn" onclick="selectRole('settings')" style="background: #5a2d2d;">⚙️ Configurações</button>
         </div>
 
         <!-- Configuração da Personalidade -->
@@ -416,6 +517,8 @@
         // Simulação de WebSocket para comunicação entre as telas
         let currentRole = null;
         let apiKey = localStorage.getItem('openai_api_key') || '';
+        let sessionStartTime = Date.now();
+        let autoClear = localStorage.getItem('auto_clear') === 'true';
         let aiPersonality = {
             systemPrompt: localStorage.getItem('ai_system_prompt') || 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa. Evite soar muito formal ou robótico.',
             temperature: parseFloat(localStorage.getItem('ai_temperature')) || 0.7,
@@ -431,6 +534,20 @@
 
         // Carrega estado do localStorage
         function loadGameState() {
+            // Se auto-clear está ativado, não carrega o estado anterior
+            if (autoClear) {
+                gameState = {
+                    questions: [],
+                    currentQuestion: null,
+                    waitingForAnswers: false,
+                    humanAnswer: null,
+                    aiAnswer: null
+                };
+                sessionStartTime = Date.now();
+                localStorage.removeItem('turing_game_state');
+                return;
+            }
+
             const saved = localStorage.getItem('turing_game_state');
             if (saved) {
                 gameState = { ...gameState, ...JSON.parse(saved) };
@@ -465,6 +582,9 @@
             } else if (role === 'personality') {
                 document.getElementById('personalityPanel').classList.add('active');
                 loadPersonalitySettings();
+            } else if (role === 'settings') {
+                document.getElementById('settingsPanel').classList.add('active');
+                loadSettingsPanel();
             }
             
             updateStatus();
@@ -603,6 +723,75 @@
                 testButton.textContent = originalText;
                 testButton.disabled = false;
             }
+        }
+
+        // Funções de configurações gerais
+        function loadSettingsPanel() {
+            document.getElementById('autoClearCheck').checked = autoClear;
+            updateStats();
+        }
+
+        function toggleAutoClear() {
+            autoClear = document.getElementById('autoClearCheck').checked;
+            localStorage.setItem('auto_clear', autoClear);
+        }
+
+        function clearChat() {
+            if (confirm('Tem certeza que deseja limpar toda a conversa? Esta ação não pode ser desfeita.')) {
+                gameState = {
+                    questions: [],
+                    currentQuestion: null,
+                    waitingForAnswers: false,
+                    humanAnswer: null,
+                    aiAnswer: null
+                };
+                
+                sessionStartTime = Date.now();
+                saveGameState();
+                
+                // Atualiza todas as interfaces
+                loadPresenterMessages();
+                loadResponderMessages();
+                updateStats();
+                
+                alert('Chat limpo com sucesso!');
+            }
+        }
+
+        function exportChat() {
+            if (gameState.questions.length === 0) {
+                alert('Não há conversas para exportar.');
+                return;
+            }
+
+            let exportText = `TESTE DE TURING - SESSÃO ${new Date().toLocaleString()}\n`;
+            exportText += `Total de perguntas: ${gameState.questions.length}\n`;
+            exportText += `Duração: ${formatTime(Date.now() - sessionStartTime)}\n\n`;
+            
+            gameState.questions.forEach((q, index) => {
+                exportText += `PERGUNTA ${index + 1}: ${q.text}\n`;
+                exportText += `RESPONDENTE 1: ${q.humanAnswer}\n`;
+                exportText += `RESPONDENTE 2: ${q.aiAnswer}\n\n`;
+            });
+
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `teste-turing-${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function updateStats() {
+            document.getElementById('questionCount').textContent = gameState.questions.length;
+            document.getElementById('sessionTime').textContent = formatTime(Date.now() - sessionStartTime);
+        }
+
+        function formatTime(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
         // Enviar pergunta (Apresentador)
@@ -830,6 +1019,8 @@
                 loadPresenterMessages();
             } else if (currentRole === 'responder') {
                 loadResponderMessages();
+            } else if (currentRole === 'settings') {
+                updateStats();
             }
         }, 2000);
 
