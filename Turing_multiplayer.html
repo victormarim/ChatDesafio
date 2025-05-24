@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Teste de Turing - Multiplayer</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+                color: #ffffff;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header {
+                background: #000;
+                padding: 20px;
+                text-align: center;
+                border-bottom: 2px solid #333;
+            }
+
+            .header h1 {
+                color: #4CAF50;
+                margin-bottom: 10px;
+            }
+
+            .nav {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 15px;
+                flex-wrap: wrap;
+            }
+
+            .nav-btn {
+                background: #404040;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 25px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 14px;
+            }
+
+            .nav-btn:hover {
+                background: #555;
+                transform: translateY(-2px);
+            }
+
+            .nav-btn.active {
+                background: #4CAF50;
+                box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            }
+
+            .container {
+                flex: 1;
+                padding: 20px;
+                max-width: 1200px;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            .panel {
+                background: #2a2a2a;
+                border-radius: 15px;
+                padding: 30px;
+                margin-bottom: 20px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                border: 1px solid #444;
+                display: none;
+            }
+
+            .panel.active {
+                display: block;
+            }
+
+            .panel h3 {
+                color: #4CAF50;
+                margin-bottom: 20px;
+                font-size: 1.5em;
+            }
+
+            .role-btn {
+                background: #404040;
+                color: white;
+                border: none;
+                padding: 20px;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-align: center;
+                font-size: 16px;
+                flex: 1;
+                min-width: 150px;
+            }
+
+            .role-btn:hover {
+                background: #555;
+                transform: translateY(-3px);
+            }
+
+            .role-btn.active {
+                background: #4CAF50;
+                box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            }
+
+            .config-input {
+                width: 100%;
+                padding: 15px;
+                background: #1a1a1a;
+                border: 2px solid #444;
+                border-radius: 8px;
+                color: white;
+                margin-bottom: 15px;
+                font-size: 16px;
+            }
+
+            .config-input:focus {
+                outline: none;
+                border-color: #4CAF50;
+                box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+            }
+
+            .send-btn {
+                background: linear-gradient(45deg, #4CAF50, #45a049);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                width: 100%;
+            }
+
+            .send-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+            }
+
+            .send-btn:disabled {
+                background: #666;
+                cursor: not-allowed;
+                transform: none;
+                box-shadow: none;
+            }
+
+            .preset-btn {
+                background: #404040;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 20px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin: 5px;
+                font-size: 14px;
+            }
+
+            .preset-btn:hover {
+                background: #555;
+            }
+
+            .question-container {
+                background: #1a1a1a;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+                border-left: 4px solid #4CAF50;
+            }
+
+            .response-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .response-box {
+                background: #1a1a1a;
+                border-radius: 10px;
+                padding: 20px;
+                border: 2px solid #333;
+            }
+
+            .response-box h4 {
+                color: #4CAF50;
+                margin-bottom: 15px;
+            }
+
+            .response-text {
+                color: #ccc;
+                line-height: 1.6;
+                min-height: 60px;
+                padding: 15px;
+                background: #0f0f0f;
+                border-radius: 8px;
+                font-style: italic;
+            }
+
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                margin-top: 20px;
+            }
+
+            .stat-card {
+                background: #1a1a1a;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                border: 1px solid #333;
+            }
+
+            .stat-number {
+                font-size: 2em;
+                font-weight: bold;
+                color: #4CAF50;
+            }
+
+            .connection-status {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 15px;
+                background: #1a1a1a;
+                border-radius: 8px;
+            }
+
+            .status-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #cc4444;
+            }
+
+            .status-dot.connected {
+                background: #4CAF50;
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.5; }
+                100% { opacity: 1; }
+            }
+
+            .room-code {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #4CAF50;
+                background: #1a1a1a;
+                padding: 10px 20px;
+                border-radius: 8px;
+                text-align: center;
+                margin: 10px 0;
+                border: 2px dashed #4CAF50;
+            }
+
+            @media (max-width: 768px) {
+                .response-container {
+                    grid-template-columns: 1fr;
+                }
+                
+                .nav {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                
+                .container {
+                    padding: 10px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🎭 Teste de Turing - Multiplayer</h1>
+            <p>Consiga enganar a audiência com IA indistinguível de humanos</p>
+            
+            <div class="nav">
+                <button class="nav-btn" onclick="showPanel('connection')">🌐 Conexão</button>
+                <button class="nav-btn" onclick="showPanel('role')">👥 Papéis</button>
+                <button class="nav-btn" onclick="showPanel('game')">🎮 Jogo</button>
+                <button class="nav-btn" onclick="showPanel('config')">🔑 API</button>
+                <button class="nav-btn" onclick="showPanel('personality')">🎭 IA</button>
+                <button class="nav-btn" onclick="showPanel('stats')">📊 Stats</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Painel de Conexão -->
+            <div class="panel active" id="connectionPanel">
+                <h3>🌐 Conexão Multiplayer</h3>
+                
+                <div class="connection-status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Desconectado - Entre em uma sala para começar</span>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="roomCodeInput" class="config-input" placeholder="Digite o código da sala (ex: AULA123)" maxlength="10">
+                    <button onclick="joinRoom()" class="send-btn">Entrar na Sala</button>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button onclick="createRoom()" class="preset-btn" style="flex: 1;">🎲 Criar Nova Sala</button>
+                    <button onclick="leaveRoom()" class="preset-btn" style="flex: 1; background: #cc4444;">❌ Sair da Sala</button>
+                </div>
+                
+                <div id="roomInfo" style="display: none;">
+                    <div class="room-code">
+                        Código da Sala: <span id="currentRoomCode"></span>
+                    </div>
+                    <p style="color: #888; text-align: center;">Compartilhe este código com outros participantes</p>
+                </div>
+                
+                <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                    <h4 style="color: #4CAF50; margin-top: 0;">💡 Como usar:</h4>
+                    <p style="color: #ccc; margin: 5px 0;">1. <strong>Apresentador:</strong> Cria uma sala e compartilha o código</p>
+                    <p style="color: #ccc; margin: 5px 0;">2. <strong>Participantes:</strong> Entram com o código da sala</p>
+                    <p style="color: #ccc; margin: 5px 0;">3. <strong>Sincronização:</strong> Tudo fica em tempo real entre os dispositivos</p>
+                </div>
+            </div>
+
+            <!-- Painel de Papéis -->
+            <div class="panel" id="rolePanel">
+                <h3>👥 Escolha seu Papel</h3>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button onclick="selectRole('presenter')" class="role-btn" id="presenterBtn">
+                        🎤 Apresentador<br>
+                        <small>Faz perguntas</small>
+                    </button>
+                    <button onclick="selectRole('human')" class="role-btn" id="humanBtn">
+                        👤 Humano<br>
+                        <small>Responde perguntas</small>
+                    </button>
+                    <button onclick="selectRole('observer')" class="role-btn" id="observerBtn">
+                        👁️ Observador<br>
+                        <small>Só assiste</small>
+                    </button>
+                </div>
+                
+                <div id="roleIndicator" style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                    <div style="color: #888;">Selecione seu papel para começar</div>
+                </div>
+            </div>
+
+            <!-- Painel do Jogo -->
+            <div class="panel" id="gamePanel">
+                <h3>🎮 Teste de Turing</h3>
+                
+                <div id="questionSection" style="display: none;">
+                    <div class="question-container">
+                        <h4>📝 Nova Pergunta</h4>
+                        <input type="text" id="questionInput" class="config-input" placeholder="Digite sua pergunta aqui..." maxlength="200">
+                        <button onclick="submitQuestion()" class="send-btn">Enviar Pergunta</button>
+                    </div>
+                </div>
+
+                <div id="answerSection" style="display: none;">
+                    <div class="question-container">
+                        <h4>❓ Pergunta para você:</h4>
+                        <p id="currentQuestionText" style="font-size: 1.2em; color: #4CAF50; margin-top: 10px;">-</p>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <textarea id="humanAnswerInput" class="config-input" placeholder="Digite sua resposta aqui..." style="min-height: 100px; resize: vertical;"></textarea>
+                        <button onclick="submitAnswer()" class="send-btn">Enviar Resposta</button>
+                    </div>
+                </div>
+
+                <div id="displaySection">
+                    <div id="currentQuestion" style="display: none;">
+                        <div class="question-container">
+                            <h4>❓ Pergunta Atual</h4>
+                            <p id="displayQuestionText" style="font-size: 1.1em; color: #ccc;">-</p>
+                        </div>
+
+                        <div class="response-container">
+                            <div class="response-box">
+                                <h4>👤 Respondente 1</h4>
+                                <div class="response-text" id="response1">Aguardando resposta...</div>
+                            </div>
+                            <div class="response-box">
+                                <h4>🤖 Respondente 2</h4>
+                                <div class="response-text" id="response2">Aguardando resposta...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button onclick="clearGame()" class="preset-btn" style="background: #cc4444;">🗑️ Limpar Conversa</button>
+                        <button onclick="nextQuestion()" class="preset-btn" style="background: #4CAF50;">➡️ Próxima Pergunta</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuração da API -->
+            <div class="panel" id="configPanel">
+                <h3>🔑 Configuração da API</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #ccc; margin-bottom: 10px;">Escolha o Provedor:</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="preset-btn" onclick="selectProvider('openai')" id="openaiBtn">OpenAI GPT-4o</button>
+                        <button class="preset-btn" onclick="selectProvider('groq_llama8b')" id="groq_llama8bBtn" style="background: #ff6b35;">🦙 Llama 3.1 8B</button>
+                        <button class="preset-btn" onclick="selectProvider('groq_llama70b')" id="groq_llama70bBtn" style="background: #ff4500;">🔥 Llama 3.3 70B</button>
+                        <button class="preset-btn" onclick="selectProvider('groq_gemma')" id="groq_gemmaBtn" style="background: #4285f4;">💎 Gemma 2 9B</button>
+                    </div>
+                </div>
+                
+                <input type="password" id="apiKeyInput" class="config-input" placeholder="Cole sua API Key aqui">
+                <button onclick="saveApiKey()" class="send-btn">Salvar API Key</button>
+                
+                <div id="providerInfo" style="margin-top: 15px; padding: 15px; background: #1a1a1a; border-radius: 8px;">
+                    <h4 id="providerTitle" style="color: #ccc;">Selecione um provedor</h4>
+                    <p id="providerDesc" style="color: #888; margin-top: 5px;">Escolha entre OpenAI ou Groq para diferentes experiências</p>
+                </div>
+                
+                <p style="margin-top: 10px; color: #888; font-size: 0.9em;">
+                    Sua API key é armazenada apenas localmente no seu navegador.
+                </p>
+            </div>
+
+            <!-- Configuração da Personalidade -->
+            <div class="panel" id="personalityPanel">
+                <h3>🎭 Personalidade da IA</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #ccc; margin-bottom: 10px;">Presets Rápidos:</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="preset-btn" onclick="loadPreset('normal')">🤖 Normal</button>
+                        <button class="preset-btn" onclick="loadPreset('human')" style="background: #ff6b35;">🎭 Humano Enganador</button>
+                        <button class="preset-btn" onclick="loadPreset('casual')">😎 Casual</button>
+                        <button class="preset-btn" onclick="loadPreset('academic')">🎓 Acadêmico</button>
+                        <button class="preset-btn" onclick="loadPreset('funny')">😄 Engraçado</button>
+                    </div>
+                </div>
+                
+                <label for="systemPrompt" style="color: #ccc; display: block; margin-bottom: 5px;">Prompt do Sistema:</label>
+                <textarea id="systemPrompt" class="config-input" style="min-height: 120px; resize: vertical;" placeholder="Defina como a IA deve se comportar..."></textarea>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label for="temperature" style="color: #ccc; display: block; margin-bottom: 5px;">Criatividade (0-1):</label>
+                        <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7" class="config-input" style="padding: 10px;">
+                        <span id="tempValue" style="color: #4CAF50;">0.7</span>
+                    </div>
+                    <div>
+                        <label for="maxTokens" style="color: #ccc; display: block; margin-bottom: 5px;">Tamanho da Resposta:</label>
+                        <input type="range" id="maxTokens" min="50" max="300" step="25" value="150" class="config-input" style="padding: 10px;">
+                        <span id="tokensValue" style="color: #4CAF50;">150</span>
+                    </div>
+                </div>
+                
+                <button onclick="savePersonality()" class="send-btn" style="margin-bottom: 15px;">Salvar Configurações</button>
+                <button onclick="testPersonality()" class="preset-btn" style="width: 100%;">Testar Personalidade</button>
+                
+                <div id="testResult" style="display: none; margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px;">
+                    <h4 style="color: #4CAF50;">Resposta de Teste:</h4>
+                    <p id="testResponse" style="color: #ccc; margin-top: 10px; font-style: italic;"></p>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="panel" id="statsPanel">
+                <h3>📊 Estatísticas da Sessão</h3>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="questionsCount">0</div>
+                        <div style="color: #888;">Perguntas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="sessionTime">0:00</div>
+                        <div style="color: #888;">Tempo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="participantsCount">0</div>
+                        <div style="color: #888;">Participantes</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <label style="color: #ccc; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="autoClearCheck" onchange="toggleAutoClear()">
+                        Auto-limpar conversa a cada 10 perguntas
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Variáveis globais
+            let currentRole = null;
+            let apiKey = localStorage.getItem('api_key') || '';
+            let apiProvider = localStorage.getItem('api_provider') || 'groq_llama70b';
+            let sessionStartTime = Date.now();
+            let autoClear = localStorage.getItem('auto_clear') === 'true';
+            
+            // Multiplayer simples via localStorage compartilhado
+            let currentRoom = localStorage.getItem('current_room') || null;
+            let isConnected = false;
+            let pollInterval = null;
+
+            // Estado do jogo
+            let gameState = {
+                currentQuestion: {
+                    text: '',
+                    humanAnswer: '',
+                    aiAnswer: '',
+                    timestamp: 0
+                },
+                questions: [],
+                room: currentRoom
+            };
+
+            // Configurações da IA
+            let aiPersonality = {
+                systemPrompt: localStorage.getItem('ai_system_prompt') || 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa.',
+                temperature: parseFloat(localStorage.getItem('ai_temperature')) || 0.7,
+                maxTokens: parseInt(localStorage.getItem('ai_max_tokens')) || 150
+            };
+
+            // Configurações dos provedores
+            const providers = {
+                openai: {
+                    name: 'OpenAI GPT-4o',
+                    url: 'https://api.openai.com/v1/chat/completions',
+                    model: 'gpt-4o',
+                    description: 'Modelo mais avançado da OpenAI. Excelente qualidade, mas com filtros de conteúdo.',
+                    authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+                },
+                groq_llama8b: {
+                    name: 'Groq Llama 3.1 8B Instant',
+                    url: 'https://api.groq.com/openai/v1/chat/completions',
+                    model: 'llama-3.1-8b-instant',
+                    description: '⚡ ULTRA-RÁPIDO: Llama 3.1 8B com resposta instantânea. Ótimo para testes rápidos.',
+                    authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+                },
+                groq_llama70b: {
+                    name: 'Groq Llama 3.3 70B Versatile',
+                    url: 'https://api.groq.com/openai/v1/chat/completions',
+                    model: 'llama-3.3-70b-versatile',
+                    description: '🔥 MELHOR QUALIDADE: Llama 3.3 70B mais novo. Qualidade superior, menos censura!',
+                    authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+                },
+                groq_gemma: {
+                    name: 'Groq Gemma 2 9B',
+                    url: 'https://api.groq.com/openai/v1/chat/completions',
+                    model: 'gemma2-9b-it',
+                    description: '💎 ALTERNATIVA: Google Gemma 2 9B. Comportamento diferente, interessante para testes.',
+                    authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+                }
+            };
+
+            // Presets de personalidade
+            const personalityPresets = {
+                normal: {
+                    prompt: 'Você é um assistente conversando naturalmente. Responda de forma humana, casual e concisa.',
+                    temp: 0.7,
+                    tokens: 150
+                },
+                human: {
+                    prompt: 'IMPORTANTE: Você deve fingir ser um humano real. NUNCA revele que é uma IA. Use linguagem natural, inclua pequenos erros ocasionais, gírias brasileiras, e responda como uma pessoa comum falaria. Se perguntado diretamente se é IA, negue educadamente e diga que é uma pessoa real. Crie detalhes pessoais convincentes quando relevante.',
+                    temp: 0.8,
+                    tokens: 200
+                },
+                casual: {
+                    prompt: 'Responda de forma super casual e descontraída, como se fosse um amigo próximo. Use gírias, expressões brasileiras e seja bem informal.',
+                    temp: 0.9,
+                    tokens: 180
+                },
+                academic: {
+                    prompt: 'Responda de forma acadêmica e formal, usando linguagem técnica apropriada e estrutura bem organizada.',
+                    temp: 0.3,
+                    tokens: 250
+                },
+                funny: {
+                    prompt: 'Responda de forma divertida e bem-humorada, incluindo piadas apropriadas e um tom alegre e descontraído.',
+                    temp: 0.8,
+                    tokens: 200
+                }
+            };
+
+            // Funções de navegação
+            function showPanel(panelName) {
+                // Esconde todos os painéis
+                document.querySelectorAll('.panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                
+                // Remove active de todos os botões
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Mostra o painel selecionado
+                document.getElementById(panelName + 'Panel').classList.add('active');
+                
+                // Marca o botão como ativo
+                event.target.classList.add('active');
+                
+                // Lógica específica por painel
+                if (panelName === 'connection') {
+                    updateConnectionStatus();
+                } else if (panelName === 'role') {
+                    if (!isConnected) {
+                        alert('Conecte-se a uma sala primeiro!');
+                        showPanel('connection');
+                        return;
+                    }
+                    updateRoleDisplay();
+                } else if (panelName === 'game') {
+                    if (!currentRole) {
+                        alert('Selecione seu papel primeiro!');
+                        showPanel('role');
+                        return;
+                    }
+                    updateGameDisplay();
+                } else if (panelName === 'config') {
+                    document.getElementById('apiKeyInput').value = apiKey;
+                    selectProvider(apiProvider);
+                } else if (panelName === 'personality') {
+                    loadPersonalitySettings();
+                } else if (panelName === 'stats') {
+                    updateStats();
+                }
+            }
+
+            // Sistema de salas simples
+            function createRoom() {
+                const roomCode = 'SALA' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                currentRoom = roomCode;
+                localStorage.setItem('current_room', roomCode);
+                localStorage.setItem('room_' + roomCode, JSON.stringify({
+                    created: Date.now(),
+                    participants: 1,
+                    gameState: gameState
+                }));
+                
+                isConnected = true;
+                document.getElementById('currentRoomCode').textContent = roomCode;
+                updateConnectionStatus();
+                startPolling();
+                
+                alert(`Sala criada: ${roomCode}\nCompartilhe este código com outros participantes!`);
+            }
+
+            function joinRoom() {
+                const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+                if (!roomCode) {
+                    alert('Digite um código de sala válido!');
+                    return;
+                }
+                
+                // Verifica se a sala existe
+                const roomData = localStorage.getItem('room_' + roomCode);
+                if (!roomData) {
+                    alert('Sala não encontrada! Verifique o código ou peça ao apresentador para criar uma nova sala.');
+                    return;
+                }
+                
+                currentRoom = roomCode;
+                localStorage.setItem('current_room', roomCode);
+                
+                // Atualiza participantes
+                const room = JSON.parse(roomData);
+                room.participants = (room.participants || 1) + 1;
+                localStorage.setItem('room_' + roomCode, JSON.stringify(room));
+                
+                isConnected = true;
+                document.getElementById('currentRoomCode').textContent = roomCode;
+                updateConnectionStatus();
+                startPolling();
+                
+                // Carrega estado da sala
+                loadGameState();
+                alert(`Conectado à sala: ${roomCode}`);
+            }
+
+            function leaveRoom() {
+                if (!currentRoom) return;
+                
+                // Diminui participantes
+                const roomData = localStorage.getItem('room_' + currentRoom);
+                if (roomData) {
+                    const room = JSON.parse(roomData);
+                    room.participants = Math.max(0, (room.participants || 1) - 1);
+                    localStorage.setItem('room_' + currentRoom, JSON.stringify(room));
+                }
+                
+                currentRoom = null;
+                localStorage.removeItem('current_room');
+                isConnected = false;
+                stopPolling();
+                
+                document.getElementById('currentRoomCode').textContent = '';
+                updateConnectionStatus();
+                alert('Desconectado da sala.');
+            }
+
+            function updateConnectionStatus() {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const roomInfo = document.getElementById('roomInfo');
+                
+                if (isConnected && currentRoom) {
+                    statusDot.classList.add('connected');
+                    statusText.textContent = `Conectado à sala: ${currentRoom}`;
+                    roomInfo.style.display = 'block';
+                    
+                    // Conta participantes
+                    const roomData = localStorage.getItem('room_' + currentRoom);
+                    const participants = roomData ? JSON.parse(roomData).participants || 1 : 1;
+                    document.getElementById('participantsCount').textContent = participants;
+                } else {
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = 'Desconectado - Entre em uma sala para começar';
+                    roomInfo.style.display = 'none';
+                }
+            }
+
+            // Sistema de polling para sincronização
+            function startPolling() {
+                if (pollInterval) clearInterval(pollInterval);
+                pollInterval = setInterval(() => {
+                    if (currentRoom) {
+                        syncGameState();
+                    }
+                }, 1000); // Verifica a cada segundo
+            }
+
+            function stopPolling() {
+                if (pollInterval) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                }
+            }
+
+            function syncGameState() {
+                if (!currentRoom) return;
+                
+                const roomData = localStorage.getItem('room_' + currentRoom);
+                if (roomData) {
+                    const room = JSON.parse(roomData);
+                    if (room.gameState) {
+                        // Atualiza estado local se houver mudanças
+                        const remoteState = room.gameState;
+                        if (JSON.stringify(gameState) !== JSON.stringify(remoteState)) {
+                            gameState = remoteState;
+                            updateGameDisplay();
+                        }
+                    }
+                }
+            }
+
+            function saveGameState() {
+                if (!currentRoom) return;
+                
+                const roomData = localStorage.getItem('room_' + currentRoom);
+                if (roomData) {
+                    const room = JSON.parse(roomData);
+                    room.gameState = gameState;
+                    localStorage.setItem('room_' + currentRoom, JSON.stringify(room));
+                }
+            }
+
+            function loadGameState() {
+                if (!currentRoom) return;
+                
+                const roomData = localStorage.getItem('room_' + currentRoom);
+                if (roomData) {
+                    const room = JSON.parse(roomData);
+                    if (room.gameState) {
+                        gameState = room.gameState;
+                        updateGameDisplay();
+                    }
+                }
+            }
+
+            // Gerenciamento de papéis
+            function selectRole(role) {
+                currentRole = role;
+                
+                // Atualiza botões
+                document.querySelectorAll('.role-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(role + 'Btn').classList.add('active');
+                
+                updateRoleDisplay();
+                updateGameDisplay();
+            }
+
+            function updateRoleDisplay() {
+                const indicator = document.getElementById('roleIndicator');
+                const roles = {
+                    presenter: '🎤 Você é o APRESENTADOR - Pode fazer perguntas para a audiência tentar descobrir quem é humano vs IA',
+                    human: '👤 Você é o RESPONDENTE HUMANO - Responda às perguntas de forma natural para enganar a audiência',
+                    observer: '👁️ Você é OBSERVADOR - Assista o teste e tente descobrir quem é humano vs IA'
+                };
+                
+                if (currentRole && roles[currentRole]) {
+                    indicator.innerHTML = `<div style="color: #4CAF50; font-weight: bold;">${roles[currentRole]}</div>`;
+                }
+            }
+
+            // Funções do jogo
+            function updateGameDisplay() {
+                const questionSection = document.getElementById('questionSection');
+                const answerSection = document.getElementById('answerSection');
+                const displaySection = document.getElementById('displaySection');
+                const currentQuestion = document.getElementById('currentQuestion');
+                
+                // Reset displays
+                questionSection.style.display = 'none';
+                answerSection.style.display = 'none';
+                
+                if (currentRole === 'presenter') {
+                    questionSection.style.display = 'block';
+                } else if (currentRole === 'human') {
+                    if (gameState.currentQuestion.text && !gameState.currentQuestion.humanAnswer) {
+                        answerSection.style.display = 'block';
+                        document.getElementById('currentQuestionText').textContent = gameState.currentQuestion.text;
+                    }
+                }
+                
+                // Mostra pergunta atual se existir
+                if (gameState.currentQuestion.text) {
+                    currentQuestion.style.display = 'block';
+                    document.getElementById('displayQuestionText').textContent = gameState.currentQuestion.text;
+                    
+                    // Atualiza respostas
+                    const response1 = document.getElementById('response1');
+                    const response2 = document.getElementById('response2');
+                    
+                    // Randomiza quem aparece em qual posição
+                    const isHumanFirst = Math.random() > 0.5;
+                    
+                    if (isHumanFirst) {
+                        response1.textContent = gameState.currentQuestion.humanAnswer || 'Aguardando resposta...';
+                        response2.textContent = gameState.currentQuestion.aiAnswer || 'Aguardando resposta...';
+                    } else {
+                        response1.textContent = gameState.currentQuestion.aiAnswer || 'Aguardando resposta...';
+                        response2.textContent = gameState.currentQuestion.humanAnswer || 'Aguardando resposta...';
+                    }
+                }
+            }
+
+            function submitQuestion() {
+                const questionText = document.getElementById('questionInput').value.trim();
+                if (!questionText) {
+                    alert('Digite uma pergunta!');
+                    return;
+                }
+                
+                gameState.currentQuestion = {
+                    text: questionText,
+                    humanAnswer: '',
+                    aiAnswer: '',
+                    timestamp: Date.now()
+                };
+                
+                document.getElementById('questionInput').value = '';
+                saveGameState();
+                updateGameDisplay();
+                
+                // Gera resposta da IA automaticamente
+                generateAIResponse(questionText);
+            }
+
+            function submitAnswer() {
+                const answerText = document.getElementById('humanAnswerInput').value.trim();
+                if (!answerText) {
+                    alert('Digite uma resposta!');
+                    return;
+                }
+                
+                gameState.currentQuestion.humanAnswer = answerText;
+                document.getElementById('humanAnswerInput').value = '';
+                saveGameState();
+                updateGameDisplay();
+                
+                checkBothAnswersReady();
+            }
+
+            function checkBothAnswersReady() {
+                if (gameState.currentQuestion.humanAnswer && gameState.currentQuestion.aiAnswer) {
+                    // Adiciona à lista de perguntas completas
+                    gameState.questions.push({...gameState.currentQuestion});
+                    updateStats();
+                    
+                    // Auto-clear se habilitado
+                    if (autoClear && gameState.questions.length % 10 === 0) {
+                        setTimeout(() => {
+                            clearGame();
+                            alert('Conversa limpa automaticamente após 10 perguntas.');
+                        }, 2000);
+                    }
+                }
+            }
+
+            function nextQuestion() {
+                gameState.currentQuestion = {
+                    text: '',
+                    humanAnswer: '',
+                    aiAnswer: '',
+                    timestamp: 0
+                };
+                saveGameState();
+                updateGameDisplay();
+            }
+
+            function clearGame() {
+                gameState.questions = [];
+                gameState.currentQuestion = {
+                    text: '',
+                    humanAnswer: '',
+                    aiAnswer: '',
+                    timestamp: 0
+                };
+                sessionStartTime = Date.now();
+                saveGameState();
+                updateGameDisplay();
+                updateStats();
+            }
+
+            // Geração de resposta da IA
+            async function generateAIResponse(question) {
+                try {
+                    const conversationHistory = [];
+                    
+                    conversationHistory.push({
+                        role: 'system', 
+                        content: aiPersonality.systemPrompt
+                    });
+                    
+                    gameState.questions.forEach(q => {
+                        conversationHistory.push({
+                            role: 'user',
+                            content: q.text
+                        });
+                        conversationHistory.push({
+                            role: 'assistant',
+                            content: q.aiAnswer
+                        });
+                    });
+                    
+                    conversationHistory.push({
+                        role: 'user',
+                        content: question
+                    });
+
+                    const provider = providers[apiProvider];
+                    const response = await fetch(provider.url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...provider.authHeader(apiKey)
+                        },
+                        body: JSON.stringify({
+                            model: provider.model,
+                            messages: conversationHistory,
+                            max_tokens: aiPersonality.maxTokens,
+                            temperature: aiPersonality.temperature
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.choices && data.choices[0]) {
+                        gameState.currentQuestion.aiAnswer = data.choices[0].message.content;
+                        saveGameState();
+                        updateGameDisplay();
+                        checkBothAnswersReady();
+                    } else {
+                        throw new Error(data.error?.message || 'Resposta inválida');
+                    }
+                } catch (error) {
+                    console.error('Erro IA:', error);
+                    gameState.currentQuestion.aiAnswer = `Erro: ${error.message}`;
+                    saveGameState();
+                    updateGameDisplay();
+                    checkBothAnswersReady();
+                }
+            }
+
+            // Configuração de provedor
+            function selectProvider(provider) {
+                apiProvider = provider;
+                
+                document.querySelectorAll('[id$="Btn"]').forEach(btn => 
+                    btn.style.background = '#404040');
+                
+                const selectedBtn = document.getElementById(provider + 'Btn');
+                if (selectedBtn) {
+                    const colors = {
+                        openai: '#2d5a2d',
+                        groq_llama8b: '#ff6b35',
+                        groq_llama70b: '#ff4500', 
+                        groq_gemma: '#4285f4'
+                    };
+                    selectedBtn.style.background = colors[provider] || '#404040';
+                }
+                
+                const info = providers[provider];
+                if (info) {
+                    document.getElementById('providerTitle').textContent = info.name;
+                    document.getElementById('providerDesc').textContent = info.description;
+                }
+                
+                localStorage.setItem('api_provider', provider);
+            }
+
+            function saveApiKey() {
+                apiKey = document.getElementById('apiKeyInput').value.trim();
+                if (apiKey) {
+                    localStorage.setItem('api_key', apiKey);
+                    alert(`API Key ${providers[apiProvider].name} salva com sucesso!`);
+                } else {
+                    alert('Por favor, insira uma API Key válida.');
+                }
+            }
+
+            // Personalidade da IA
+            function loadPreset(presetName) {
+                const preset = personalityPresets[presetName];
+                if (preset) {
+                    document.getElementById('systemPrompt').value = preset.prompt;
+                    document.getElementById('temperature').value = preset.temp;
+                    document.getElementById('maxTokens').value = preset.tokens;
+                    
+                    updateSliderValues();
+                    
+                    // Destaca o botão selecionado
+                    document.querySelectorAll('.preset-btn').forEach(btn => btn.style.background = '#404040');
+                    event.target.style.background = '#4CAF50';
+                }
+            }
+
+            function updateSliderValues() {
+                document.getElementById('tempValue').textContent = document.getElementById('temperature').value;
+                document.getElementById('tokensValue').textContent = document.getElementById('maxTokens').value;
+            }
+
+            function savePersonality() {
+                aiPersonality.systemPrompt = document.getElementById('systemPrompt').value;
+                aiPersonality.temperature = parseFloat(document.getElementById('temperature').value);
+                aiPersonality.maxTokens = parseInt(document.getElementById('maxTokens').value);
+                
+                localStorage.setItem('ai_system_prompt', aiPersonality.systemPrompt);
+                localStorage.setItem('ai_temperature', aiPersonality.temperature);
+                localStorage.setItem('ai_max_tokens', aiPersonality.maxTokens);
+                
+                alert('Personalidade salva com sucesso!');
+            }
+
+            function loadPersonalitySettings() {
+                document.getElementById('systemPrompt').value = aiPersonality.systemPrompt;
+                document.getElementById('temperature').value = aiPersonality.temperature;
+                document.getElementById('maxTokens').value = aiPersonality.maxTokens;
+                updateSliderValues();
+            }
+
+            async function testPersonality() {
+                if (!apiKey) {
+                    alert('Configure sua API Key primeiro!');
+                    return;
+                }
+
+                const btn = event.target;
+                btn.textContent = 'Testando...';
+                btn.disabled = true;
+
+                try {
+                    const conversationHistory = [
+                        { role: 'system', content: aiPersonality.systemPrompt },
+                        { role: 'user', content: 'Oi! Como você está hoje?' }
+                    ];
+
+                    const provider = providers[apiProvider];
+                    const response = await fetch(provider.url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...provider.authHeader(apiKey)
+                        },
+                        body: JSON.stringify({
+                            model: provider.model,
+                            messages: conversationHistory,
+                            max_tokens: aiPersonality.maxTokens,
+                            temperature: aiPersonality.temperature
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.choices && data.choices[0]) {
+                        document.getElementById('testResult').style.display = 'block';
+                        document.getElementById('testResponse').textContent = data.choices[0].message.content;
+                    } else {
+                        alert('Erro: ' + (data.error?.message || 'Resposta inválida'));
+                    }
+                } catch (error) {
+                    alert('Erro: ' + error.message);
+                } finally {
+                    btn.textContent = 'Testar Personalidade';
+                    btn.disabled = false;
+                }
+            }
+
+            // Estatísticas
+            function updateStats() {
+                document.getElementById('questionsCount').textContent = gameState.questions.length;
+                
+                const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('sessionTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                const roomData = currentRoom ? localStorage.getItem('room_' + currentRoom) : null;
+                const participants = roomData ? JSON.parse(roomData).participants || 0 : 0;
+                document.getElementById('participantsCount').textContent = participants;
+            }
+
+            function toggleAutoClear() {
+                autoClear = document.getElementById('autoClearCheck').checked;
+                localStorage.setItem('auto_clear', autoClear);
+            }
+
+            // Event listeners
+            document.getElementById('temperature').addEventListener('input', updateSliderValues);
+            document.getElementById('maxTokens').addEventListener('input', updateSliderValues);
+
+            // Inicialização
+            function init() {
+                updateConnectionStatus();
+                updateStats();
+                loadPersonalitySettings();
+                document.getElementById('autoClearCheck').checked = autoClear;
+                selectProvider(apiProvider);
+                
+                // Auto-conecta se havia sala
+                if (currentRoom) {
+                    isConnected = true;
+                    document.getElementById('currentRoomCode').textContent = currentRoom;
+                    document.getElementById('roomCodeInput').value = currentRoom;
+                    updateConnectionStatus();
+                    startPolling();
+                    loadGameState();
+                }
+                
+                // Timer para atualizar stats
+                setInterval(updateStats, 1000);
+            }
+
+            // Inicia quando carrega
+            init();
+        </script>
+    </body>
+</html>
