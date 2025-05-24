@@ -45,7 +45,7 @@
             font-size: 18px;
         }
 
-        .setup-info {
+        .api-config {
             background: rgba(255,255,255,0.1);
             padding: 15px;
             border-radius: 10px;
@@ -297,6 +297,27 @@
             letter-spacing: 1px;
         }
 
+        .api-status {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .api-status.success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .api-status.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
         @media (max-width: 1024px) {
             .content {
                 grid-template-columns: 1fr;
@@ -307,19 +328,6 @@
                 border-top: 1px solid #e0e0e0;
             }
         }
-
-        .url-info {
-            background: #f8f9fa;
-            border: 2px solid #28a745;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }
-
-        .url-info strong {
-            color: #28a745;
-        }
     </style>
 </head>
 <body>
@@ -327,21 +335,24 @@
         <div class="header">
             <h1>🎭 Humano vs IA 🤖</h1>
             <p>Interface do Apresentador - Palco</p>
-            <div class="setup-info">
-                <strong>📋 Para usar:</strong> O respondente deve abrir a <strong>segunda aplicação</strong> no celular/tablet
+            <div class="api-config">
+                <strong>🔧 Configuração:</strong> 
+                <span id="apiStatus">Verificando API...</span>
+                <br>
+                <strong>🤖 Modelo:</strong> <span id="modelInfo">Carregando...</span>
             </div>
         </div>
 
         <div class="content">
             <div class="chat-area">
-                <div class="url-info">
-                    <strong>🔗 IMPORTANTE:</strong> Certifique-se de que a pessoa respondente está usando a <strong>segunda aplicação</strong> (respondente.html) no dispositivo dela. Ambas as aplicações devem estar abertas simultaneamente.
+                <div class="api-status" id="apiStatusCard">
+                    <strong>⚙️ Status da API:</strong> <span id="apiStatusText">Inicializando...</span>
                 </div>
 
                 <div class="messages-container" id="messagesContainer">
                     <div class="message question">
                         <div class="message-header">👨‍🏫 Sistema</div>
-                        Bem-vindo! Certifique-se de que o respondente humano abriu a segunda aplicação. Depois digite sua primeira pergunta abaixo.
+                        Bem-vindo! Configure sua chave OpenAI no código e certifique-se de que o respondente abriu a segunda aplicação.
                     </div>
                 </div>
 
@@ -374,11 +385,11 @@
 
                 <div class="instructions">
                     <h3>📋 Como usar:</h3>
-                    <p>1. Respondente abre a 2ª aplicação<br>
-                    2. Faça uma pergunta<br>
-                    3. Aguarde as duas respostas<br>
-                    4. Tente descobrir qual é humana<br>
-                    5. Discuta com a audiência!</p>
+                    <p>1. Configure sua chave OpenAI no código<br>
+                    2. Respondente abre a 2ª aplicação<br>
+                    3. Faça uma pergunta<br>
+                    4. Aguarde as duas respostas<br>
+                    5. Tente descobrir qual é humana!</p>
                 </div>
 
                 <div class="status-card">
@@ -398,18 +409,19 @@
         // ===== CONFIGURAÇÃO DA IA =====
         const AI_CONFIG = {
             // 🔑 SUBSTITUA PELA SUA CHAVE DA OPENAI:
-            API_KEY: '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',
-            ORG_ID: 'org-F7zimsPXzb9shrFm5HJEJ4Zy',
+            API_KEY: 'SUA_CHAVE_OPENAI_AQUI',
             
-            // 🎭 PERSONALIDADE DA IA:
-            personality: "Você é uma IA tentando se passar por humano. A pessoa que está te mandando mensagem está tentando descobrir se você é humano ou não. Faça de tudo para despistar, seja humano.",
+            // 🎭 PERSONALIDADE DA IA (customize como quiser):
+            personality: "Você é um professor universitário experiente. Responda de forma acadêmica, usando linguagem formal e conceitos teóricos. Seja preciso e didático. Mantenha respostas entre 50-150 palavras.",
             
-            // Para personalidade mais casual, use:
-            // personality: "Você é uma pessoa jovem e descontraída. Use linguagem casual e responda como se estivesse conversando com um amigo.",
+            // 🤖 CONFIGURAÇÕES DO MODELO:
+            model: "gpt-3.5-turbo",
+            max_tokens: 150,
+            temperature: 0.7,
             
-            model: "gpt-4",
-            max_tokens: 300,
-            temperature: 0.7
+            // 🌐 PROXY PARA CONTORNAR CORS:
+            useProxy: true,
+            proxyUrl: "https://api.allorigins.win/raw?url="
         };
 
         // ===== VARIÁVEIS GLOBAIS =====
@@ -417,71 +429,82 @@
         let waitingForResponses = false;
         let questionId = 0;
         let checkInterval = null;
+        let apiWorking = false;
 
-        // ===== RESPOSTAS SIMULADAS (BACKUP) =====
-        const simulatedResponses = [
-            "Esta é uma questão fascinante que merece análise cuidadosa dos múltiplos aspectos envolvidos. A literatura acadêmica demonstra correlações significativas.",
-            "Baseado em evidências empíricas, posso afirmar que há padrões identificáveis. Os estudos mais recentes convergem em pontos essenciais.",
-            "Do ponto de vista analítico, esta questão estrutura-se em diferentes camadas de complexidade, cada uma oferecendo insights únicos para a compreensão.",
-            "A abordagem multidisciplinar revela perspectivas convergentes. Os dados disponíveis sugerem uma tendência clara com variações contextuais.",
-            "Esta pergunta nos leva a refletir sobre paradigmas estabelecidos. A análise sistemática identifica padrões que orientam respostas precisas.",
-            "Considerando os fatores teóricos e práticos, a evidência aponta para uma correlação significativa entre os elementos mencionados na questão.",
-            "Os métodos de investigação contemporâneos demonstram que esta temática possui dimensões que requerem consideração interdisciplinar cuidadosa.",
-            "A fundamentação conceitual desta questão revela aspectos que conectam teoria e prática de forma sistemática e metodologicamente rigorosa."
-        ];
+        // ===== RESPOSTAS SIMULADAS INTELIGENTES =====
+        const simulatedResponses = {
+            academic: [
+                "Esta questão apresenta múltiplas dimensões analíticas. A literatura especializada demonstra que há correlações significativas entre os fatores mencionados, requerendo uma abordagem interdisciplinar para compreensão adequada.",
+                "Do ponto de vista teórico, esta problemática estrutura-se em camadas de complexidade distintas. Os estudos empíricos mais recentes convergem para uma perspectiva que considera variáveis contextuais específicas.",
+                "A análise sistemática desta temática revela padrões identificáveis na literatura. Os frameworks conceituais estabelecidos oferecem instrumentos metodológicos para uma investigação rigorosa dos elementos envolvidos.",
+                "Considerando os paradigmas estabelecidos, a evidência disponível sugere uma relação causal entre os componentes. A abordagem multidisciplinar permite uma compreensão mais holística do fenômeno.",
+                "Esta questão demanda uma reflexão epistemológica cuidadosa. Os dados empíricos disponíveis na literatura especializada indicam tendências que merecem investigação aprofundada através de métodos científicos."
+            ],
+            casual: [
+                "Cara, essa é uma pergunta bem interessante! Pelo que eu sei, tem várias formas de pensar nisso. Acho que depende muito do contexto, sabe? Já vi situações parecidas e normalmente...",
+                "Olha, na minha experiência isso varia bastante. Tem gente que pensa de um jeito, tem gente que pensa de outro. Eu costumo ver por este ângulo aqui, que faz mais sentido pra mim...",
+                "Boa pergunta! Isso me lembra uma vez que... enfim, acho que a resposta não é tão simples assim. Tem que considerar vários fatores diferentes, tipo...",
+                "Hmmm, deixa eu pensar... Eu diria que sim e não, ao mesmo tempo. Sabe como é, essas coisas nunca são preto no branco. Depende muito da situação específica...",
+                "Interessante você perguntar isso! Eu estava justamente pensando nisso outro dia. Na minha opinião, a questão é mais complexa do que parece à primeira vista..."
+            ]
+        };
 
-        // ===== FUNÇÕES PRINCIPAIS =====
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !waitingForResponses) {
-                sendQuestion();
+        // ===== FUNÇÃO PARA TESTAR API =====
+        async function testAPIConnection() {
+            updateAPIStatus('Testando conexão...', 'warning');
+            
+            if (AI_CONFIG.API_KEY === 'SUA_CHAVE_OPENAI_AQUI') {
+                updateAPIStatus('⚠️ Chave não configurada - usando respostas simuladas', 'error');
+                document.getElementById('modelInfo').textContent = 'Simulado (configure sua chave)';
+                return false;
+            }
+
+            try {
+                console.log('🔑 Testando API Key:', AI_CONFIG.API_KEY.substring(0, 20) + '...');
+                
+                const response = await makeAPICall("Teste de conexão - responda apenas 'OK'");
+                
+                if (response && response.length > 0) {
+                    updateAPIStatus('✅ API OpenAI conectada com sucesso!', 'success');
+                    document.getElementById('modelInfo').textContent = AI_CONFIG.model;
+                    apiWorking = true;
+                    return true;
+                } else {
+                    throw new Error('Resposta vazia da API');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro na API:', error);
+                updateAPIStatus('❌ Erro na API - usando respostas simuladas', 'error');
+                document.getElementById('modelInfo').textContent = 'Simulado (erro na API)';
+                apiWorking = false;
+                return false;
             }
         }
 
-        function sendQuestion() {
-            const input = document.getElementById('questionInput');
-            const question = input.value.trim();
-            
-            if (!question || waitingForResponses) return;
+        // ===== FUNÇÃO PARA CHAMAR API COM MULTIPLE PROXIES =====
+        async function makeAPICall(question) {
+            const proxies = [
+                '', // Tentativa direta primeiro
+                'https://api.allorigins.win/raw?url=',
+                'https://corsproxy.io/?',
+                'https://cors-anywhere.herokuapp.com/'
+            ];
 
-            // Adicionar pergunta ao chat
-            addQuestionToChat(question);
-            
-            // Configurar estado
-            input.value = '';
-            waitingForResponses = true;
-            updateUI();
-            questionId = Date.now();
+            for (let proxy of proxies) {
+                try {
+                    console.log(`🌐 Tentando${proxy ? ' com proxy' : ' conexão direta'}:`, proxy);
+                    
+                    const url = proxy ? 
+                        proxy + encodeURIComponent('https://api.openai.com/v1/chat/completions') :
+                        'https://api.openai.com/v1/chat/completions';
 
-            // Salvar pergunta para o respondente
-            localStorage.setItem('currentQuestion', JSON.stringify({
-                id: questionId,
-                question: question,
-                timestamp: Date.now()
-            }));
-
-            // Gerar resposta da IA
-            generateAIResponse(question);
-
-            // Verificar por resposta humana
-            startCheckingForHumanResponse();
-        }
-
-        async function generateAIResponse(question) {
-            try {
-                let aiResponse;
-
-                if (AI_CONFIG.API_KEY === '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') {
-                    // Usar resposta simulada
-                    await new Promise(resolve => setTimeout(resolve, Math.random() * 3000 + 2000));
-                    aiResponse = getSimulatedResponse(question);
-                } else {
-                    // Usar API real da OpenAI
-                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    const response = await fetch(url, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${AI_CONFIG.API_KEY}`,
-                            'OpenAI-Organization': AI_CONFIG.ORG_ID
+                            ...(proxy ? {} : { 'OpenAI-Organization': AI_CONFIG.ORG_ID || '' })
                         },
                         body: JSON.stringify({
                             model: AI_CONFIG.model,
@@ -497,39 +520,123 @@
                     const data = await response.json();
                     
                     if (data.error) {
-                        console.error('Erro da API:', data.error);
-                        aiResponse = getSimulatedResponse(question);
-                    } else {
-                        aiResponse = data.choices[0].message.content;
+                        console.error('❌ Erro da API:', data.error);
+                        throw new Error(data.error.message || 'Erro da API');
                     }
+
+                    if (data.choices && data.choices[0] && data.choices[0].message) {
+                        console.log('✅ API funcionou com:', proxy || 'conexão direta');
+                        return data.choices[0].message.content;
+                    }
+                    
+                    throw new Error('Resposta inválida da API');
+                    
+                } catch (error) {
+                    console.warn(`❌ Falhou${proxy ? ' com proxy' : ' conexão direta'}:`, error.message);
+                    continue;
+                }
+            }
+            
+            throw new Error('Todas as tentativas falharam');
+        }
+
+        function updateAPIStatus(message, type = 'warning') {
+            const statusCard = document.getElementById('apiStatusCard');
+            const statusText = document.getElementById('apiStatusText');
+            const headerStatus = document.getElementById('apiStatus');
+            
+            statusText.textContent = message;
+            headerStatus.textContent = message;
+            
+            statusCard.className = `api-status ${type}`;
+        }
+
+        // ===== FUNÇÃO PARA GERAR RESPOSTA SIMULADA INTELIGENTE =====
+        function getSmartSimulatedResponse(question) {
+            const style = AI_CONFIG.personality.includes('professor') || AI_CONFIG.personality.includes('acadêmic') 
+                ? 'academic' : 'casual';
+            
+            const responses = simulatedResponses[style];
+            const baseResponse = responses[Math.floor(Math.random() * responses.length)];
+            
+            // Adicionar referência sutil à pergunta
+            const questionWords = question.toLowerCase().split(' ').filter(w => w.length > 3);
+            const relevantWord = questionWords[Math.floor(Math.random() * questionWords.length)] || 'tema';
+            
+            return baseResponse + ` Especificamente em relação a "${relevantWord}", observa-se que a complexidade aumenta consideravelmente.`;
+        }
+
+        // ===== FUNÇÕES PRINCIPAIS =====
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !waitingForResponses) {
+                sendQuestion();
+            }
+        }
+
+        function sendQuestion() {
+            const input = document.getElementById('questionInput');
+            const question = input.value.trim();
+            
+            if (!question || waitingForResponses) return;
+
+            addQuestionToChat(question);
+            
+            input.value = '';
+            waitingForResponses = true;
+            updateUI();
+            questionId = Date.now();
+
+            localStorage.setItem('currentQuestion', JSON.stringify({
+                id: questionId,
+                question: question,
+                timestamp: Date.now()
+            }));
+
+            generateAIResponse(question);
+            startCheckingForHumanResponse();
+        }
+
+        async function generateAIResponse(question) {
+            try {
+                console.log('🤖 Gerando resposta da IA para:', question);
+                
+                let aiResponse;
+
+                if (apiWorking) {
+                    // Tentar API real
+                    try {
+                        aiResponse = await makeAPICall(question);
+                        console.log('✅ Resposta da API OpenAI recebida');
+                    } catch (error) {
+                        console.warn('⚠️ API falhou, usando simulada:', error.message);
+                        aiResponse = getSmartSimulatedResponse(question);
+                    }
+                } else {
+                    // Usar resposta simulada
+                    await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+                    aiResponse = getSmartSimulatedResponse(question);
+                    console.log('🎭 Usando resposta simulada inteligente');
                 }
 
-                // Salvar resposta da IA
                 localStorage.setItem(`ai_response_${questionId}`, JSON.stringify({
                     response: aiResponse,
                     timestamp: Date.now()
                 }));
 
-                // Atualizar status
                 document.getElementById('statusA').textContent = '✅';
                 document.getElementById('statusA').style.color = '#4CAF50';
 
                 checkBothResponsesReady();
 
             } catch (error) {
-                console.error('Erro ao gerar resposta da IA:', error);
-                const fallbackResponse = getSimulatedResponse(question);
+                console.error('❌ Erro fatal ao gerar resposta:', error);
+                const fallbackResponse = getSmartSimulatedResponse(question);
                 localStorage.setItem(`ai_response_${questionId}`, JSON.stringify({
                     response: fallbackResponse,
                     timestamp: Date.now()
                 }));
                 checkBothResponsesReady();
             }
-        }
-
-        function getSimulatedResponse(question) {
-            const baseResponse = simulatedResponses[Math.floor(Math.random() * simulatedResponses.length)];
-            return baseResponse + ` Especificamente sobre "${question.substring(0, 30)}...", isso exemplifica a complexidade inerente ao tema.`;
         }
 
         function startCheckingForHumanResponse() {
@@ -539,7 +646,6 @@
                 checkBothResponsesReady();
             }, 500);
 
-            // Timeout após 60 segundos
             setTimeout(() => {
                 if (waitingForResponses) {
                     clearInterval(checkInterval);
@@ -560,30 +666,25 @@
                 
                 displayBothResponses(aiData.response, humanData.response);
                 
-                // Limpar localStorage
                 localStorage.removeItem(`ai_response_${questionId}`);
                 localStorage.removeItem(`human_response_${questionId}`);
                 localStorage.removeItem('currentQuestion');
             } else if (humanResponse) {
-                // Atualizar status humano
                 document.getElementById('statusB').textContent = '✅';
                 document.getElementById('statusB').style.color = '#4CAF50';
             }
         }
 
         function displayBothResponses(aiResponse, humanResponse) {
-            // Randomizar posições
             const isAIFirst = Math.random() < 0.5;
             const responseA = isAIFirst ? aiResponse : humanResponse;
             const responseB = isAIFirst ? humanResponse : aiResponse;
 
             const container = document.getElementById('messagesContainer');
             
-            // Remover indicador de espera
             const waitingIndicator = document.getElementById('waitingIndicator');
             if (waitingIndicator) waitingIndicator.remove();
 
-            // Adicionar respostas
             const responsesDiv = document.createElement('div');
             responsesDiv.className = 'responses-pair';
             responsesDiv.innerHTML = `
@@ -600,12 +701,10 @@
             container.appendChild(responsesDiv);
             container.scrollTop = container.scrollHeight;
 
-            // Resetar estado
             waitingForResponses = false;
             currentRound++;
             updateUI();
             
-            // Salvar mapeamento (opcional, para referência)
             localStorage.setItem(`round_${currentRound-1}_mapping`, JSON.stringify({
                 A: isAIFirst ? 'IA' : 'Humano',
                 B: isAIFirst ? 'Humano' : 'IA'
@@ -623,7 +722,6 @@
             container.appendChild(questionDiv);
             container.scrollTop = container.scrollHeight;
 
-            // Adicionar indicador de espera
             const waitingDiv = document.createElement('div');
             waitingDiv.className = 'waiting-indicator';
             waitingDiv.id = 'waitingIndicator';
@@ -672,15 +770,21 @@
         }
 
         // ===== INICIALIZAÇÃO =====
-        updateUI();
-
-        // Limpar dados antigos ao carregar
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
+            console.log('🚀 Iniciando aplicação...');
+            updateUI();
+            
+            // Testar conexão da API
+            await testAPIConnection();
+            
+            // Limpar dados antigos
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('ai_response_') || key.startsWith('human_response_')) {
                     localStorage.removeItem(key);
                 }
             });
+            
+            console.log('✅ Aplicação pronta!');
         });
     </script>
 </body>
