@@ -789,23 +789,37 @@
             const container = document.getElementById('responderMessages');
             container.innerHTML = '';
             
+            // Mostra perguntas e respostas já completas
             gameState.questions.forEach(q => {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'message';
                 questionDiv.innerHTML = `<div class="bubble">${q.text}</div>`;
                 container.appendChild(questionDiv);
+                
+                // Mostra a resposta do humano (própria resposta)
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'message question';
+                answerDiv.innerHTML = `<div class="bubble">${q.humanAnswer}</div>`;
+                container.appendChild(answerDiv);
             });
             
+            // Pergunta atual
             if (gameState.currentQuestion) {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'message';
                 questionDiv.innerHTML = `<div class="bubble">${gameState.currentQuestion.text}</div>`;
                 container.appendChild(questionDiv);
                 
+                // Se já respondeu, mostra a resposta
                 if (gameState.currentQuestion.humanAnswer) {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.className = 'message question';
+                    answerDiv.innerHTML = `<div class="bubble">${gameState.currentQuestion.humanAnswer}</div>`;
+                    container.appendChild(answerDiv);
+                    
                     const responseDiv = document.createElement('div');
                     responseDiv.className = 'waiting';
-                    responseDiv.innerHTML = 'Resposta enviada! Aguardando próxima pergunta...';
+                    responseDiv.innerHTML = '✅ Resposta enviada! Aguardando próxima pergunta...';
                     container.appendChild(responseDiv);
                 }
             }
