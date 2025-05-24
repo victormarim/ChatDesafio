@@ -409,7 +409,7 @@
         // ===== CONFIGURAÇÃO DA IA =====
         const AI_CONFIG = {
             // 🔑 SUBSTITUA PELA SUA CHAVE DA OPENAI:
-            API_KEY: 'SUA_CHAVE_OPENAI_AQUI',
+            API_KEY: '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',
             
             // 🎭 PERSONALIDADE DA IA (customize como quiser):
             personality: "Você é um professor universitário experiente. Responda de forma acadêmica, usando linguagem formal e conceitos teóricos. Seja preciso e didático. Mantenha respostas entre 50-150 palavras.",
@@ -453,7 +453,7 @@
         async function testAPIConnection() {
             updateAPIStatus('Testando conexão...', 'warning');
             
-            if (AI_CONFIG.API_KEY === 'SUA_CHAVE_OPENAI_AQUI') {
+            if (AI_CONFIG.API_KEY === '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') {
                 updateAPIStatus('⚠️ Chave não configurada - usando respostas simuladas', 'error');
                 document.getElementById('modelInfo').textContent = 'Simulado (configure sua chave)';
                 return false;
