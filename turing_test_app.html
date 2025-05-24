@@ -336,9 +336,11 @@
             
             <div style="margin-bottom: 20px;">
                 <h4 style="color: #ccc; margin-bottom: 10px;">Escolha o Provedor:</h4>
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                     <button class="preset-btn" onclick="selectProvider('openai')" id="openaiBtn">OpenAI GPT-4o</button>
-                    <button class="preset-btn" onclick="selectProvider('groq')" id="groqBtn" style="background: #ff6b35;">🦙 Groq Llama 3.1</button>
+                    <button class="preset-btn" onclick="selectProvider('groq_llama8b')" id="groq_llama8bBtn" style="background: #ff6b35;">🦙 Llama 3.1 8B</button>
+                    <button class="preset-btn" onclick="selectProvider('groq_llama70b')" id="groq_llama70bBtn" style="background: #ff4500;">🔥 Llama 3.3 70B</button>
+                    <button class="preset-btn" onclick="selectProvider('groq_gemma')" id="groq_gemmaBtn" style="background: #4285f4;">💎 Gemma 2 9B</button>
                 </div>
             </div>
             
@@ -435,7 +437,7 @@
         // Variáveis globais
         let currentRole = null;
         let apiKey = localStorage.getItem('api_key') || '';
-        let apiProvider = localStorage.getItem('api_provider') || 'groq'; // Default para Groq
+        let apiProvider = localStorage.getItem('api_provider') || 'groq_llama70b'; // Default para Llama 70B
         let sessionStartTime = Date.now();
         let autoClear = localStorage.getItem('auto_clear') === 'true';
         
@@ -454,11 +456,25 @@
                 description: 'Modelo mais avançado da OpenAI. Excelente qualidade, mas com filtros de conteúdo.',
                 authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
             },
-            groq: {
-                name: 'Groq Llama 3.1 70B',
+            groq_llama8b: {
+                name: 'Groq Llama 3.1 8B Instant',
                 url: 'https://api.groq.com/openai/v1/chat/completions',
-                model: 'llama-3.1-70b-versatile',
-                description: '🔥 RECOMENDADO: Llama 3.1 70B ultra-rápido. Menos censura, controle total, gratuito!',
+                model: 'llama-3.1-8b-instant',
+                description: '⚡ ULTRA-RÁPIDO: Llama 3.1 8B com resposta instantânea. Ótimo para testes rápidos.',
+                authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+            },
+            groq_llama70b: {
+                name: 'Groq Llama 3.3 70B Versatile',
+                url: 'https://api.groq.com/openai/v1/chat/completions',
+                model: 'llama-3.3-70b-versatile',
+                description: '🔥 MELHOR QUALIDADE: Llama 3.3 70B mais novo. Qualidade superior, menos censura!',
+                authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
+            },
+            groq_gemma: {
+                name: 'Groq Gemma 2 9B',
+                url: 'https://api.groq.com/openai/v1/chat/completions',
+                model: 'gemma2-9b-it',
+                description: '💎 ALTERNATIVA: Google Gemma 2 9B. Comportamento diferente, interessante para testes.',
                 authHeader: (key) => ({ 'Authorization': `Bearer ${key}` })
             }
         };
@@ -661,15 +677,26 @@ LEMBRE-SE: Seu objetivo é CONVENCER que você é humano real. Seja natural, imp
             apiProvider = provider;
             
             // Atualiza botões
-            document.querySelectorAll('#openaiBtn, #groqBtn').forEach(btn => 
+            document.querySelectorAll('[id$="Btn"]').forEach(btn => 
                 btn.style.background = '#404040');
-            document.getElementById(provider + 'Btn').style.background = 
-                provider === 'groq' ? '#ff6b35' : '#2d5a2d';
+            
+            const selectedBtn = document.getElementById(provider + 'Btn');
+            if (selectedBtn) {
+                const colors = {
+                    openai: '#2d5a2d',
+                    groq_llama8b: '#ff6b35',
+                    groq_llama70b: '#ff4500', 
+                    groq_gemma: '#4285f4'
+                };
+                selectedBtn.style.background = colors[provider] || '#404040';
+            }
             
             // Atualiza informações
             const info = providers[provider];
-            document.getElementById('providerTitle').textContent = info.name;
-            document.getElementById('providerDesc').textContent = info.description;
+            if (info) {
+                document.getElementById('providerTitle').textContent = info.name;
+                document.getElementById('providerDesc').textContent = info.description;
+            }
             
             // Salva preferência
             localStorage.setItem('api_provider', provider);
