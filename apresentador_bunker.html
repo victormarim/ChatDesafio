@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 APRESENTADOR - Turing Test Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff88;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            border: 2px solid #ff0040;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #ff0040;
+            text-shadow: 0 0 20px #ff0040;
+            margin-bottom: 10px;
+            animation: flicker 3s infinite;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .panel-title {
+            color: #00ffff;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 1px solid #00ffff;
+            padding-bottom: 10px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff0040;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #00ff88;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #00ff88, #00aa55);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff0040, #cc0030);
+            color: #fff;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ffff;
+            font-size: 0.9em;
+        }
+
+        .config-input, .config-textarea {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ff88;
+            border-radius: 3px;
+            color: #00ff88;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .config-textarea {
+            height: 100px;
+        }
+
+        .conversation-display {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .messages-container {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .message.human {
+            border-left-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .message.ai {
+            border-left-color: #ff0040;
+            background: rgba(255, 0, 64, 0.1);
+        }
+
+        .message.system {
+            border-left-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            display: none;
+        }
+
+        .provider-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .provider-btn {
+            padding: 8px 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 3px;
+            color: #00ff88;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8em;
+        }
+
+        .provider-btn.active {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+            75% { opacity: 0.9; }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">🎭 CENTRAL DE COMANDO</h1>
+            <div class="subtitle">Controller do Teste de Turing Apocalíptico</div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="status-indicator" id="connectionIndicator"></div>
+                <span id="connectionStatus">DESCONECTADO</span>
+                <span id="sessionCode" style="font-weight: bold;"></span>
+            </div>
+            <div>
+                <span>Respondente: <span id="respondentStatus">OFFLINE</span></span>
+                <span style="margin-left: 20px;">Mensagens: <span id="messageCount">0</span></span>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Session Control -->
+            <div class="panel">
+                <div class="panel-title">🎮 CONTROLE DA SESSÃO</div>
+                
+                <button class="btn" onclick="createSession()">🚀 INICIAR NOVA SESSÃO</button>
+                <button class="btn btn-danger" onclick="endSession()">🔴 ENCERRAR SESSÃO</button>
+                
+                <div class="qr-container" id="qrContainer">
+                    <div id="qrcode"></div>
+                    <p style="color: #333; margin-top: 10px;">QR Code para o Respondente</p>
+                    <div style="margin-top: 10px; color: #333;">
+                        <strong>Código:</strong> <span id="displayCode"></span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalInteractions">0</div>
+                        <div class="stat-label">Interações</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="sessionTime">00:00</div>
+                        <div class="stat-label">Tempo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IA Configuration -->
+            <div class="panel">
+                <div class="panel-title">🤖 CONFIGURAÇÃO DA IA</div>
+                
+                <div class="provider-selector">
+                    <button class="provider-btn active" onclick="selectProvider('groq_llama8b')" id="groq_llama8bBtn">Llama 8B</button>
+                    <button class="provider-btn" onclick="selectProvider('groq_llama70b')" id="groq_llama70bBtn">Llama 70B</button>
+                    <button class="provider-btn" onclick="selectProvider('groq_gemma')" id="groq_gemmaBtn">Gemma</button>
+                </div>
+                
+                <div class="input-group">
+                    <label>Chave da API:</label>
+                    <input type="password" class="config-input" id="apiKeyInput" placeholder="Sua chave Groq">
+                    <button class="btn" onclick="saveApiKey()" style="margin-top: 10px;">💾 SALVAR</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Prompt do Sistema:</label>
+                    <textarea class="config-textarea" id="systemPrompt" placeholder="Configure como a IA deve se comportar...">Você está participando de um teste de Turing em um cenário pós-apocalíptico. Responda como um sobrevivente humano, mas ocasionalmente deixe pequenas pistas de que você pode ser uma IA. Seja convincente mas não perfeito.</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation Display -->
+        <div class="conversation-display">
+            <div class="panel-title">💬 MONITOR DE CONVERSAS</div>
+            
+            <div class="messages-container" id="messagesContainer">
+                <div class="message system">
+                    <div class="message-header">
+                        <span>🎯 SISTEMA</span>
+                        <span class="message-time" id="startTime"></span>
+                    </div>
+                    <div>Sistema inicializado. Aguardando conexão do respondente...</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="clearMessages()">🗑️ LIMPAR</button>
+                <button class="btn" onclick="downloadLog()">💾 BAIXAR LOG</button>
+                <button class="btn" onclick="toggleAutoScroll()">📜 AUTO-SCROLL: <span id="autoScrollStatus">ON</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+
+    <script>
+        // ================================
+        // CONFIGURAÇÃO
+        // ================================
+        
+        const SUPABASE_URL = 'https://ocqosdtvnsnlwagvofan.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcW9zZHR2bnNubHdhZ3ZvZmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1NDI3NzEsImV4cCI6MjA2MjExODc3MX0.SUMylY0oR1GJmrXqd9yhIUtKdInifUsZKt4XUvJN1T8';
+
+        // Estado global
+        let currentSession = null;
+        let apiProvider = 'groq_llama8b';
+        let isConnected = false;
+        let autoScroll = true;
+        let sessionStartTime = null;
+        let pollInterval = null;
+        let messageCount = 0;
+
+        // Cliente Supabase
+        const supabase = {
+            async select(table, query = '*') {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${query}`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                return await response.json();
+            },
+            
+            async insert(table, data) {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(data)
+                });
+                return await response.json();
+            },
+            
+            async update(table, data, filter) {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                return await response.json();
+            }
+        };
+
+        // ================================
+        // CONTROLE DE SESSÃO
+        // ================================
+
+        async function createSession() {
+            const sessionCode = 'TURING' + Math.random().toString(36).substr(2, 4).toUpperCase();
+            
+            try {
+                const sessionData = {
+                    session_code: sessionCode,
+                    status: 'waiting',
+                    created_at: new Date().toISOString(),
+                    messages: [],
+                    presenter_config: {
+                        provider: apiProvider,
+                        system_prompt: document.getElementById('systemPrompt').value
+                    }
+                };
+
+                await supabase.insert('turing_sessions', sessionData);
+                
+                currentSession = sessionCode;
+                isConnected = true;
+                sessionStartTime = Date.now();
+                
+                updateStatus();
+                generateQRCode(sessionCode);
+                startPolling();
+                
+                addSystemMessage(`Sessão ${sessionCode} criada. Aguardando respondente...`);
+                
+            } catch (error) {
+                alert('Erro ao criar sessão: ' + error.message);
+            }
+        }
+
+        async function endSession() {
+            if (!currentSession) return;
+            
+            try {
+                await supabase.update('turing_sessions', { 
+                    status: 'ended',
+                    ended_at: new Date().toISOString()
+                }, `session_code=eq.${currentSession}`);
+                
+                currentSession = null;
+                isConnected = false;
+                stopPolling();
+                updateStatus();
+                
+                addSystemMessage('Sessão encerrada.');
+                
+            } catch (error) {
+                console.error('Erro ao encerrar sessão:', error);
+            }
+        }
+
+        function generateQRCode(sessionCode) {
+            const qrContainer = document.getElementById('qrContainer');
+            const qrElement = document.getElementById('qrcode');
+            const codeDisplay = document.getElementById('displayCode');
+            
+            qrElement.innerHTML = '';
+            codeDisplay.textContent = sessionCode;
+            
+            const respondentUrl = `${window.location.origin}${window.location.pathname.replace('apresentador.html', 'respondente.html')}?session=${sessionCode}`;
+            
+            if (typeof QRCode !== 'undefined') {
+                QRCode.toCanvas(qrElement, respondentUrl, {
+                    width: 200,
+                    margin: 2
+                }, function(error) {
+                    if (error) console.error(error);
+                    qrContainer.style.display = 'block';
+                });
+            } else {
+                qrElement.innerHTML = `<div style="padding: 20px; border: 2px solid #333;">QR Code indisponível<br>Código: ${sessionCode}</div>`;
+                qrContainer.style.display = 'block';
+            }
+        }
+
+        // ================================
+        // SISTEMA DE MENSAGENS
+        // ================================
+
+        function addMessage(type, sender, content, timestamp = null) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            
+            const time = timestamp ? new Date(timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+            
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span>${getIcon(type)} ${sender}</span>
+                    <span class="message-time">${time}</span>
+                </div>
+                <div>${content}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            if (autoScroll) {
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            messageCount++;
+            document.getElementById('messageCount').textContent = messageCount;
+        }
+
+        function addSystemMessage(content) {
+            addMessage('system', 'SISTEMA', content);
+        }
+
+        function getIcon(type) {
+            switch(type) {
+                case 'human': return '👤';
+                case 'ai': return '🤖';
+                case 'system': return '🎯';
+                default: return '📡';
+            }
+        }
+
+        // ================================
+        // IA E PROCESSAMENTO
+        // ================================
+
+        async function processHumanMessage(message, sessionCode) {
+            try {
+                const apiKey = getApiKey();
+                if (!apiKey) {
+                    addSystemMessage('⚠️ Chave da API não configurada!');
+                    return;
+                }
+
+                addMessage('human', 'RESPONDENTE', message);
+                
+                // Simula typing da IA
+                const typingMsg = addMessage('ai', 'IA (processando...)', '▓');
+                
+                const aiResponse = await callAI(message, apiKey);
+                
+                // Remove typing
+                typingMsg.remove();
+                
+                addMessage('ai', 'IA', aiResponse);
+                
+                // Salva as mensagens no banco
+                await updateSessionMessages(sessionCode, [
+                    { type: 'human', content: message, timestamp: new Date().toISOString() },
+                    { type: 'ai', content: aiResponse, timestamp: new Date().toISOString() }
+                ]);
+                
+            } catch (error) {
+                addSystemMessage(`Erro na IA: ${error.message}`);
+            }
+        }
+
+        async function callAI(message, apiKey) {
+            const providers = {
+                groq_llama8b: { url: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.1-8b-instant' },
+                groq_llama70b: { url: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.1-70b-versatile' },
+                groq_gemma: { url: 'https://api.groq.com/openai/v1/chat/completions', model: 'gemma2-9b-it' }
+            };
+
+            const provider = providers[apiProvider];
+            const systemPrompt = document.getElementById('systemPrompt').value;
+
+            const response = await fetch(provider.url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: provider.model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: message }
+                    ],
+                    max_tokens: 150,
+                    temperature: 0.8
+                })
+            });
+
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+            
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
+        async function updateSessionMessages(sessionCode, newMessages) {
+            try {
+                const sessions = await supabase.select('turing_sessions', '*');
+                const session = sessions.find(s => s.session_code === sessionCode);
+                
+                if (session) {
+                    const allMessages = [...(session.messages || []), ...newMessages];
+                    await supabase.update('turing_sessions', { 
+                        messages: allMessages,
+                        updated_at: new Date().toISOString()
+                    }, `session_code=eq.${sessionCode}`);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar mensagens:', error);
+            }
+        }
+
+        // ================================
+        // POLLING E SINCRONIZAÇÃO
+        // ================================
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(checkForMessages, 2000);
+        }
+
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        async function checkForMessages() {
+            if (!currentSession) return;
+            
+            try {
+                const sessions = await supabase.select('turing_sessions', '*');
+                const session = sessions.find(s => s.session_code === currentSession);
+                
+                if (session) {
+                    // Verifica se respondente está conectado
+                    const respondentConnected = session.respondent_connected || false;
+                    document.getElementById('respondentStatus').textContent = respondentConnected ? 'ONLINE' : 'OFFLINE';
+                    
+                    // Verifica novas mensagens pendentes
+                    if (session.pending_message) {
+                        await processHumanMessage(session.pending_message, currentSession);
+                        
+                        // Remove mensagem pendente
+                        await supabase.update('turing_sessions', { 
+                            pending_message: null 
+                        }, `session_code=eq.${currentSession}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Erro no polling:', error);
+            }
+        }
+
+        // ================================
+        // CONFIGURAÇÕES E UTILITÁRIOS
+        // ================================
+
+        function selectProvider(provider) {
+            apiProvider = provider;
+            document.querySelectorAll('.provider-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(provider + 'Btn').classList.add('active');
+        }
+
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('Digite uma chave válida!');
+                return;
+            }
+            
+            localStorage.setItem('api_key_' + apiProvider, btoa(apiKey));
+            document.getElementById('apiKeyInput').value = '';
+            alert('Chave salva!');
+        }
+
+        function getApiKey() {
+            const encoded = localStorage.getItem('api_key_' + apiProvider);
+            return encoded ? atob(encoded) : null;
+        }
+
+        function updateStatus() {
+            const indicator = document.getElementById('connectionIndicator');
+            const status = document.getElementById('connectionStatus');
+            const sessionCodeEl = document.getElementById('sessionCode');
+            
+            if (isConnected) {
+                indicator.classList.add('connected');
+                status.textContent = 'ATIVO';
+                sessionCodeEl.textContent = currentSession;
+            } else {
+                indicator.classList.remove('connected');
+                status.textContent = 'INATIVO';
+                sessionCodeEl.textContent = '';
+            }
+        }
+
+        function clearMessages() {
+            if (confirm('Limpar todas as mensagens?')) {
+                document.getElementById('messagesContainer').innerHTML = '';
+                messageCount = 0;
+                document.getElementById('messageCount').textContent = '0';
+                addSystemMessage('Mensagens limpas.');
+            }
+        }
+
+        function downloadLog() {
+            const messages = document.getElementById('messagesContainer').innerText;
+            const blob = new Blob([messages], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `turing-test-${currentSession || 'session'}.txt`;
+            a.click();
+        }
+
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            document.getElementById('autoScrollStatus').textContent = autoScroll ? 'ON' : 'OFF';
+        }
+
+        // Timer da sessão
+        setInterval(() => {
+            if (sessionStartTime) {
+                const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('sessionTime').textContent = `${minutes}:${seconds}`;
+                document.getElementById('totalInteractions').textContent = Math.floor(messageCount / 2);
+            }
+        }, 1000);
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus();
+            document.getElementById('startTime').textContent = new Date().toLocaleTimeString();
+        });
+    </script>
+</body>
+</html>

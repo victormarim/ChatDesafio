@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 RESPONDENTE - Terminal de Sobrevivência</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #0a2a0a 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #00ff00;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-title {
+            color: #00ff00;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff0000;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #00ff00;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .session-connect {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .session-connect.hidden {
+            display: none;
+        }
+
+        .connect-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #00ff00;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .session-input {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: 1.1em;
+            text-align: center;
+            text-transform: uppercase;
+            width: 200px;
+        }
+
+        .connect-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #00ff00, #00aa00);
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .terminal-body {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-body.hidden {
+            display: none;
+        }
+
+        .messages-area {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #004400;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            max-height: 400px;
+            min-height: 300px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid;
+            animation: messageAppear 0.5s ease-in;
+        }
+
+        .message.human {
+            border-left-color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .message.ai {
+            border-left-color: #ff6600;
+            background: rgba(255, 102, 0, 0.1);
+        }
+
+        .message.system {
+            border-left-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .message-content {
+            line-height: 1.4;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff00;
+            border-radius: 6px;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: 1.1em;
+            resize: none;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #00ffaa;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .send-btn {
+            padding: 15px 20px;
+            background: linear-gradient(45deg, #00ff00, #00aa00);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            min-width: 100px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .waiting-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #ffff00;
+            font-style: italic;
+            display: none;
+        }
+
+        .waiting-indicator.show {
+            display: block;
+        }
+
+        .footer-info {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8em;
+            opacity: 0.6;
+            border-top: 1px solid #004400;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typing {
+            0%, 50% { content: '▓'; }
+            51%, 100% { content: ''; }
+        }
+
+        .typing::after {
+            content: '▓';
+            animation: typing 1s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .session-input {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .input-area {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-header">
+        <div class="terminal-title">🤖 TERMINAL DE SOBREVIVÊNCIA</div>
+        <div class="connection-status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">DESCONECTADO</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Session Connection -->
+        <div class="session-connect" id="connectSection">
+            <div class="connect-title">🔗 CONEXÃO COM BUNKER</div>
+            <p style="margin-bottom: 20px; opacity: 0.8;">
+                Digite o código da sessão ou escaneie o QR Code do apresentador
+            </p>
+            
+            <div class="input-group">
+                <input type="text" class="session-input" id="sessionInput" 
+                       placeholder="CÓDIGO DA SESSÃO" maxlength="10" autocomplete="off">
+                <button class="connect-btn" onclick="connectToSession()">CONECTAR</button>
+            </div>
+            
+            <div style="margin-top: 15px; font-size: 0.9em; opacity: 0.7;">
+                Aguardando código da sessão...
+            </div>
+        </div>
+
+        <!-- Terminal Interface -->
+        <div class="terminal-body hidden" id="terminalSection">
+            <div class="messages-area" id="messagesArea">
+                <div class="message system">
+                    <div class="message-header">🎯 SISTEMA</div>
+                    <div class="message-content">Conectado ao bunker. Iniciando protocolo de comunicação...</div>
+                </div>
+            </div>
+
+            <div class="waiting-indicator" id="waitingIndicator">
+                <div class="typing">Aguardando resposta da IA</div>
+            </div>
+
+            <div class="input-area">
+                <textarea class="message-input" id="messageInput" 
+                         placeholder="Digite sua mensagem..." 
+                         rows="2" onkeypress="handleKeyPress(event)"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">ENVIAR</button>
+            </div>
+
+            <div class="footer-info">
+                Sessão: <span id="currentSession">---</span> | 
+                Mensagens enviadas: <span id="messageCounter">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================================
+        // CONFIGURAÇÃO
+        // ================================
+        
+        const SUPABASE_URL = 'https://ocqosdtvnsnlwagvofan.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcW9zZHR2bnNubHdhZ3ZvZmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1NDI3NzEsImV4cCI6MjA2MjExODc3MX0.SUMylY0oR1GJmrXqd9yhIUtKdInifUsZKt4XUvJN1T8';
+
+        // Estado global
+        let currentSession = null;
+        let isConnected = false;
+        let messageCount = 0;
+        let pollInterval = null;
+        let isWaitingForResponse = false;
+
+        // Cliente Supabase simplificado
+        const supabase = {
+            async select(table, query = '*') {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${query}`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                return await response.json();
+            },
+            
+            async update(table, data, filter) {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                return await response.json();
+            }
+        };
+
+        // ================================
+        // CONEXÃO COM SESSÃO
+        // ================================
+
+        async function connectToSession() {
+            const sessionCode = document.getElementById('sessionInput').value.trim().toUpperCase();
+            
+            if (!sessionCode) {
+                alert('Digite um código de sessão válido!');
+                return;
+            }
+
+            try {
+                // Verifica se a sessão existe
+                const sessions = await supabase.select('turing_sessions', '*');
+                const session = sessions.find(s => s.session_code === sessionCode);
+
+                if (!session) {
+                    alert('Sessão não encontrada! Verifique o código.');
+                    return;
+                }
+
+                if (session.status === 'ended') {
+                    alert('Esta sessão já foi encerrada.');
+                    return;
+                }
+
+                // Marca como conectado
+                await supabase.update('turing_sessions', {
+                    respondent_connected: true,
+                    respondent_joined_at: new Date().toISOString()
+                }, `session_code=eq.${sessionCode}`);
+
+                currentSession = sessionCode;
+                isConnected = true;
+                
+                updateUI();
+                startPolling();
+                loadExistingMessages();
+
+                addMessage('system', 'SISTEMA', `Conectado à sessão ${sessionCode}. Você pode começar a enviar mensagens.`);
+
+            } catch (error) {
+                alert('Erro ao conectar: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        function updateUI() {
+            const connectSection = document.getElementById('connectSection');
+            const terminalSection = document.getElementById('terminalSection');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const currentSessionEl = document.getElementById('currentSession');
+
+            if (isConnected) {
+                connectSection.classList.add('hidden');
+                terminalSection.classList.remove('hidden');
+                statusDot.classList.add('connected');
+                statusText.textContent = 'CONECTADO';
+                currentSessionEl.textContent = currentSession;
+            } else {
+                connectSection.classList.remove('hidden');
+                terminalSection.classList.add('hidden');
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'DESCONECTADO';
+                currentSessionEl.textContent = '---';
+            }
+        }
+
+        // ================================
+        // SISTEMA DE MENSAGENS
+        // ================================
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                alert('Digite uma mensagem!');
+                return;
+            }
+
+            if (!isConnected) {
+                alert('Conecte-se a uma sessão primeiro!');
+                return;
+            }
+
+            if (isWaitingForResponse) {
+                alert('Aguarde a resposta da mensagem anterior!');
+                return;
+            }
+
+            try {
+                // Envia mensagem para o apresentador processar
+                await supabase.update('turing_sessions', {
+                    pending_message: message,
+                    updated_at: new Date().toISOString()
+                }, `session_code=eq.${currentSession}`);
+
+                messageInput.value = '';
+                messageCount++;
+                document.getElementById('messageCounter').textContent = messageCount;
+                
+                isWaitingForResponse = true;
+                updateSendButton();
+                showWaitingIndicator();
+
+            } catch (error) {
+                alert('Erro ao enviar mensagem: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        function addMessage(type, sender, content) {
+            const messagesArea = document.getElementById('messagesArea');
+            const messageDiv = document.createElement('div');
+            
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `
+                <div class="message-header">${getIcon(type)} ${sender}</div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function getIcon(type) {
+            switch(type) {
+                case 'human': return '👤';
+                case 'ai': return '🤖';
+                case 'system': return '🎯';
+                default: return '📡';
+            }
+        }
+
+        function updateSendButton() {
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = isWaitingForResponse;
+            sendBtn.textContent = isWaitingForResponse ? 'AGUARDE...' : 'ENVIAR';
+        }
+
+        function showWaitingIndicator() {
+            const indicator = document.getElementById('waitingIndicator');
+            indicator.classList.add('show');
+        }
+
+        function hideWaitingIndicator() {
+            const indicator = document.getElementById('waitingIndicator');
+            indicator.classList.remove('show');
+        }
+
+        // ================================
+        // POLLING E SINCRONIZAÇÃO
+        // ================================
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(checkForUpdates, 1500);
+        }
+
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        async function checkForUpdates() {
+            if (!currentSession) return;
+
+            try {
+                const sessions = await supabase.select('turing_sessions', '*');
+                const session = sessions.find(s => s.session_code === currentSession);
+
+                if (!session) {
+                    // Sessão foi deletada
+                    disconnect();
+                    return;
+                }
+
+                if (session.status === 'ended') {
+                    addMessage('system', 'SISTEMA', 'Sessão encerrada pelo apresentador.');
+                    disconnect();
+                    return;
+                }
+
+                // Verifica novas mensagens
+                checkForNewMessages(session.messages || []);
+
+            } catch (error) {
+                console.error('Erro no polling:', error);
+            }
+        }
+
+        let lastMessageCount = 0;
+
+        function checkForNewMessages(messages) {
+            if (messages.length > lastMessageCount) {
+                // Há novas mensagens
+                const newMessages = messages.slice(lastMessageCount);
+                
+                for (const msg of newMessages) {
+                    if (msg.type === 'human') {
+                        addMessage('human', 'VOCÊ', msg.content);
+                    } else if (msg.type === 'ai') {
+                        addMessage('ai', 'IA', msg.content);
+                        
+                        // Mensagem da IA chegou, pode enviar nova mensagem
+                        isWaitingForResponse = false;
+                        updateSendButton();
+                        hideWaitingIndicator();
+                    }
+                }
+                
+                lastMessageCount = messages.length;
+            }
+        }
+
+        async function loadExistingMessages() {
+            try {
+                const sessions = await supabase.select('turing_sessions', '*');
+                const session = sessions.find(s => s.session_code === currentSession);
+                
+                if (session && session.messages) {
+                    for (const msg of session.messages) {
+                        if (msg.type === 'human') {
+                            addMessage('human', 'VOCÊ', msg.content);
+                        } else if (msg.type === 'ai') {
+                            addMessage('ai', 'IA', msg.content);
+                        }
+                    }
+                    lastMessageCount = session.messages.length;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+
+        function disconnect() {
+            currentSession = null;
+            isConnected = false;
+            isWaitingForResponse = false;
+            messageCount = 0;
+            lastMessageCount = 0;
+            
+            stopPolling();
+            updateUI();
+            updateSendButton();
+            hideWaitingIndicator();
+            
+            document.getElementById('messageCounter').textContent = '0';
+            document.getElementById('messagesArea').innerHTML = '';
+        }
+
+        // ================================
+        // EVENTOS E UTILITÁRIOS
+        // ================================
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Auto-conexão via URL
+        function checkAutoConnect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionCode = urlParams.get('session');
+            
+            if (sessionCode) {
+                document.getElementById('sessionInput').value = sessionCode;
+                setTimeout(() => connectToSession(), 500);
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            updateSendButton();
+            checkAutoConnect();
+        });
+
+        // Limpeza ao sair
+        window.addEventListener('beforeunload', () => {
+            if (currentSession) {
+                // Marca como desconectado
+                supabase.update('turing_sessions', {
+                    respondent_connected: false
+                }, `session_code=eq.${currentSession}`).catch(() => {});
+            }
+        });
+    </script>
+</body>
+</html>
