@@ -536,13 +536,19 @@
             try {
                 console.log('🏗️ Criando bunker:', roomCode);
                 
-                const data = await supabaseClient.insert('turing_rooms', {
+                // Dados limpos e validados
+                const insertData = {
                     room_code: roomCode,
-                    game_state: gameState,
+                    game_state: JSON.parse(JSON.stringify(gameState)), // Garante JSON válido
                     participants: 1
-                });
+                };
+                
+                console.log('📝 Dados para inserção:', insertData);
 
-                if (data && !data.error) {
+                const data = await supabaseClient.insert('turing_rooms', insertData);
+                console.log('✅ Resposta da inserção:', data);
+
+                if (data && Array.isArray(data) && data.length > 0) {
                     currentRoom = roomCode;
                     localStorage.setItem('current_room', roomCode);
                     
@@ -556,11 +562,12 @@
                     alert(`🏗️ BUNKER ESTABELECIDO: ${roomCode}\n\n📱 Use o QR Code ou compartilhe o código com outros sobreviventes!`);
                     console.log('✅ Bunker criado com sucesso');
                 } else {
-                    throw new Error(data.error?.message || 'Erro desconhecido');
+                    throw new Error('Resposta inválida do servidor');
                 }
             } catch (error) {
                 console.error('❌ Erro ao criar bunker:', error);
-                alert('⚠️ Erro ao estabelecer bunker: ' + error.message);
+                console.error('❌ Stack trace:', error.stack);
+                alert('⚠️ Erro ao estabelecer bunker: ' + error.message + '\n\nTente novamente.');
             }
         }
 
@@ -571,10 +578,19 @@
                 return;
             }
             
+            // Validação do formato do código
+            if (!roomCode.startsWith('BUNKER') || roomCode.length < 8) {
+                alert('⚠️ Código inválido! Use o formato: BUNKERXXX');
+                return;
+            }
+            
             try {
                 console.log('🔓 Conectando ao bunker:', roomCode);
                 
+                // Busca simplificada sem filtros complexos
                 const data = await supabaseClient.select('turing_rooms', '*');
+                console.log('📋 Dados recebidos:', data);
+                
                 const room = data.find(r => r.room_code === roomCode);
 
                 if (!room) {
@@ -582,11 +598,17 @@
                     return;
                 }
 
-                // Atualiza participantes
-                await supabaseClient.update('turing_rooms', { 
-                    participants: (room.participants || 1) + 1,
+                console.log('🏠 Sala encontrada:', room);
+
+                // Atualiza participantes com dados limpos
+                const updateData = { 
+                    participants: Math.max(1, (room.participants || 0) + 1),
                     updated_at: new Date().toISOString()
-                }, `room_code=eq.${roomCode}`);
+                };
+                
+                console.log('🔄 Atualizando participantes:', updateData);
+                
+                await supabaseClient.update('turing_rooms', updateData, `room_code=eq.${roomCode}`);
 
                 currentRoom = roomCode;
                 localStorage.setItem('current_room', roomCode);
@@ -598,14 +620,19 @@
                 startTensionTimer();
                 startPolling();
                 
-                gameState = room.game_state || gameState;
-                updateGameDisplay();
+                // Carrega game_state de forma segura
+                if (room.game_state && typeof room.game_state === 'object') {
+                    gameState = { ...gameState, ...room.game_state };
+                    updateGameDisplay();
+                }
                 
                 alert(`🔓 CONECTADO AO BUNKER: ${roomCode}\n\n✅ Protocolo de sobrevivência ativado!`);
                 console.log('✅ Conectado com sucesso');
+                
             } catch (error) {
-                console.error('❌ Erro ao conectar:', error);
-                alert('⚠️ Erro ao conectar ao bunker: ' + error.message);
+                console.error('❌ Erro detalhado:', error);
+                console.error('❌ Stack trace:', error.stack);
+                alert('⚠️ Erro ao conectar ao bunker: ' + error.message + '\n\nTente novamente ou use outro código.');
             }
         }
 
