@@ -1029,20 +1029,41 @@
             // URL para auto-join
             const joinUrl = `${window.location.origin}${window.location.pathname}?join=${roomCode}`;
             
-            QRCode.toCanvas(qrElement, joinUrl, {
-                width: 200,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            }, function(error) {
-                if (error) {
-                    console.error('Erro ao gerar QR Code:', error);
-                } else {
-                    qrContainer.style.display = 'block';
-                }
-            });
+            // Verifica se QRCode está disponível
+            if (typeof QRCode !== 'undefined') {
+                QRCode.toCanvas(qrElement, joinUrl, {
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }, function(error) {
+                    if (error) {
+                        console.error('Erro ao gerar QR Code:', error);
+                        showQRFallback(qrElement, joinUrl, roomCode);
+                    } else {
+                        qrContainer.style.display = 'block';
+                    }
+                });
+            } else {
+                console.warn('QRCode library não carregada, mostrando fallback');
+                showQRFallback(qrElement, joinUrl, roomCode);
+            }
+        }
+
+        function showQRFallback(element, joinUrl, roomCode) {
+            element.innerHTML = `
+                <div style="padding: 20px; text-align: center; border: 2px solid #333;">
+                    <div style="font-size: 1.2em; margin-bottom: 10px; color: #333;">📱 CÓDIGO DO BUNKER</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #000; margin: 10px 0;">${roomCode}</div>
+                    <div style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        Compartilhe este código ou link:<br>
+                        <a href="${joinUrl}" style="color: #0066cc; word-break: break-all;">${joinUrl}</a>
+                    </div>
+                </div>
+            `;
+            document.getElementById('qrContainer').style.display = 'block';
         }
 
         function checkAutoJoin() {
